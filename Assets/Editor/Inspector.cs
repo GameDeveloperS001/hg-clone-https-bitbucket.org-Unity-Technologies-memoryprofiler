@@ -18,6 +18,7 @@ namespace MemoryProfilerWindow
 		MemoryProfilerWindow _hostWindow;
 		CrawledMemorySnapshot _unpackedCrawl;
 		PrimitiveValueReader _primitiveValueReader;
+        Dictionary<ulong, ThingInMemory> objectCache = new Dictionary<ulong, ThingInMemory>();
 
 		static class Styles
 		{
@@ -237,9 +238,7 @@ namespace MemoryProfilerWindow
 
 					if (!typeDescription.isValueType)
 					{
-						/*
-						var item = _unpackedCrawl.allObjects.OfType<ManagedObject> ().FirstOrDefault (mo => mo.address ==
-
+                        ThingInMemory item = GetThingAt (bytesAndOffset.ReadPointer());
 						if (item == null)
 						{
 						    EditorGUI.BeginDisabledGroup(true);
@@ -248,8 +247,8 @@ namespace MemoryProfilerWindow
 						}
 						else
 						{
-						    DrawLinks(new [] { item._thingInMemory });
-						}*/
+						    DrawLinks(new ThingInMemory[] { item });
+						}
 					}
 					else
 					{
@@ -258,6 +257,15 @@ namespace MemoryProfilerWindow
 					break;
 			}
 		}
+
+        private ThingInMemory GetThingAt(ulong address)
+        {
+            if (!objectCache.ContainsKey (address)) {
+                objectCache[address] = _unpackedCrawl.allObjects.OfType<ManagedObject> ().FirstOrDefault (mo => mo.address == address);
+            }
+
+            return objectCache [address];
+        }
 
 		/*
 		private Item FindItemPointedToByManagedFieldAt(BytesAndOffset bytesAndOffset)
@@ -277,8 +285,7 @@ namespace MemoryProfilerWindow
 
 		private void DrawLinks(IEnumerable<UInt64> pointers)
 		{
-			IEnumerable<ManagedObject> things = pointers.Select(p => _unpackedCrawl.allObjects.OfType<ManagedObject>().First(mo => mo.address == p));
-			DrawLinks(things.Cast<ThingInMemory>());
+            DrawLinks(pointers.Select(p => GetThingAt (p)));
 		}
 
 		private void DrawLinks(IEnumerable<ThingInMemory> thingInMemories)

@@ -10,6 +10,7 @@ using System.Net;
 using NUnit.Framework.Constraints;
 using UnityEditor.MemoryProfiler;
 using Object = UnityEngine.Object;
+using System.IO;
 
 namespace MemoryProfilerWindow
 {
@@ -63,11 +64,36 @@ namespace MemoryProfilerWindow
 		{
 			Initialize();
 
+            GUILayout.BeginHorizontal ();
 			if (GUILayout.Button("Take Snapshot"))
 			{
 				UnityEditor.MemoryProfiler.MemorySnapshot.RequestNewSnapshot();
 			}
-
+            if (GUILayout.Button("Save Snapshot..."))
+            {
+                if (_snapshot != null) {
+                    string fileName = EditorUtility.SaveFilePanel ("Save Snapshot", null, "MemorySnapshot", "memsnap");
+                    if (!string.IsNullOrEmpty (fileName)) {
+                        System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter ();
+                        using (Stream stream = File.Open (fileName, FileMode.Create)) {
+                            bf.Serialize (stream, _snapshot);
+                        }
+                    }
+                } else {
+                    UnityEngine.Debug.LogWarning ("No snapshot to save.  Try taking a snapshot first.");
+                }
+            }
+            if (GUILayout.Button("Load Snapshot..."))
+            {
+                string fileName = EditorUtility.OpenFilePanel ("Load Snapshot", null, "memsnap");
+                if (!string.IsNullOrEmpty (fileName)) {
+                    System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter ();
+                    using (Stream stream = File.Open (fileName, FileMode.Open)) {
+                        IncomingSnapshot (bf.Deserialize (stream) as PackedMemorySnapshot);
+                    }
+                }
+            }
+            GUILayout.EndHorizontal ();
 			if (_treeMapView != null)
 				_treeMapView.Draw();
 			if (_inspector != null)

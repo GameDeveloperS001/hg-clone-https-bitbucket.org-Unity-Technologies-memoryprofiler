@@ -120,7 +120,19 @@ namespace MemoryProfilerWindow
 					continue;
 				}
 
-				CrawlPointer(packedMemorySnapshot, startIndices, fieldLocation.ReadPointer(), indexOfFrom, out_connections, out_managedObjects);
+                bool gotException = false;
+                try{
+                    
+                    ulong pointer = fieldLocation.ReadPointer ();
+                } catch (ArgumentException) {
+                    UnityEngine.Debug.LogWarningFormat ("Skipping field {0} on type {1}", field.name, typeDescription.name);
+                    UnityEngine.Debug.LogWarningFormat ("FieldType.name: {0}", fieldType.name);
+                    gotException = true;
+                }
+
+                if (!gotException) {
+                    CrawlPointer (packedMemorySnapshot, startIndices, fieldLocation.ReadPointer (), indexOfFrom, out_connections, out_managedObjects);
+                }
 			}
 		}
 
