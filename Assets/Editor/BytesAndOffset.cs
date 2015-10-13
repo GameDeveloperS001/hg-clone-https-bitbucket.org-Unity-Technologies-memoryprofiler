@@ -134,7 +134,7 @@ namespace MemoryProfilerWindow
 			var length = lengthPointer.ReadInt32();
 			var firstChar = lengthPointer.NextPointer();
 
-			return System.Text.Encoding.Unicode.GetString(firstChar.bytes, firstChar.offset, length);
+			return System.Text.Encoding.Unicode.GetString(firstChar.bytes, firstChar.offset, length*2);
 		}
 	}
 }

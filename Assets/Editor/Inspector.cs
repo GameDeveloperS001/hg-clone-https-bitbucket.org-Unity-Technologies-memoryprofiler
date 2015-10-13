@@ -77,6 +77,8 @@ namespace MemoryProfilerWindow
 					EditorGUILayout.LabelField("Type", managedObject.typeDescription.name);
 					EditorGUILayout.LabelField("Address", managedObject.address.ToString());
 
+					if (managedObject.typeDescription.name == "System.String")
+						EditorGUILayout.LabelField("value",_primitiveValueReader.ReadString(_unpackedCrawl.managedHeap.Find(managedObject.address, _unpackedCrawl.virtualMachineInformation)));
 					DrawFields(managedObject);
 
 					if (managedObject.typeDescription.isArray)
@@ -186,7 +188,7 @@ namespace MemoryProfilerWindow
 		{
 			GUILayout.Space(10);
 			GUILayout.Label("Fields:");
-			DrawFields(managedObject.typeDescription, _unpackedCrawl.managedHeap.Find(managedObject.address + (UInt64)_unpackedCrawl.virtualMachineInformation.objectHeaderSize, _unpackedCrawl.virtualMachineInformation));
+			DrawFields(managedObject.typeDescription, _unpackedCrawl.managedHeap.Find(managedObject.address, _unpackedCrawl.virtualMachineInformation));
 		}
 
 		private void DrawValueFor(FieldDescription field, BytesAndOffset bytesAndOffset)
