@@ -14,135 +14,142 @@ using System.IO;
 
 namespace MemoryProfilerWindow
 {
-	public class MemoryProfilerWindow : EditorWindow
-	{
-		[NonSerialized]
-		UnityEditor.MemoryProfiler.PackedMemorySnapshot _snapshot;
+    public class MemoryProfilerWindow : EditorWindow
+    {
+        [NonSerialized]
+        UnityEditor.MemoryProfiler.PackedMemorySnapshot _snapshot;
 
-		[SerializeField]
-		PackedCrawlerData _packedCrawled;
+        [SerializeField]
+        PackedCrawlerData _packedCrawled;
 
-		[NonSerialized]
-		CrawledMemorySnapshot _unpackedCrawl;
+        [NonSerialized]
+        CrawledMemorySnapshot _unpackedCrawl;
 
-		Vector2 _scrollPosition;
+        Vector2 _scrollPosition;
 
-		[NonSerialized]
-		private bool _registered = false;
-		public Inspector _inspector;
-		TreeMapView _treeMapView;
+        [NonSerialized]
+        private bool _registered = false;
+        public Inspector _inspector;
+        TreeMapView _treeMapView;
 
-		[MenuItem("Window/MemoryProfiler")]
-		static void Create()
-		{
-			EditorWindow.GetWindow<MemoryProfilerWindow>();
-		}
+        [MenuItem("Window/MemoryProfiler")]
+        static void Create()
+        {
+            EditorWindow.GetWindow<MemoryProfilerWindow>();
+        }
 
-		[MenuItem("Window/MemoryProfilerInspect")]
-		static void Inspect()
-		{
-		}
+        [MenuItem("Window/MemoryProfilerInspect")]
+        static void Inspect()
+        {
+        }
 
-		public void OnDisable()
-		{
-			//	UnityEditor.MemoryProfiler.MemorySnapshot.OnSnapshotReceived -= IncomingSnapshot;
-		}
+        public void OnDisable()
+        {
+            //	UnityEditor.MemoryProfiler.MemorySnapshot.OnSnapshotReceived -= IncomingSnapshot;
+        }
 
-		public void Initialize()
-		{
-			if (!_registered)
-			{
-				UnityEditor.MemoryProfiler.MemorySnapshot.OnSnapshotReceived += IncomingSnapshot;
-				_registered = true;
-			}
+        public void Initialize()
+        {
+            if (!_registered)
+            {
+                UnityEditor.MemoryProfiler.MemorySnapshot.OnSnapshotReceived += IncomingSnapshot;
+                _registered = true;
+            }
 
-			if (_unpackedCrawl == null && _packedCrawled != null && _packedCrawled.valid)
-				Unpack();
-		}
+            if (_unpackedCrawl == null && _packedCrawled != null && _packedCrawled.valid)
+                Unpack();
+        }
 
-		void OnGUI()
-		{
-			Initialize();
+        void OnGUI()
+        {
+            Initialize();
 
-            GUILayout.BeginHorizontal ();
-			if (GUILayout.Button("Take Snapshot"))
-			{
-				UnityEditor.MemoryProfiler.MemorySnapshot.RequestNewSnapshot();
-			}
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Take Snapshot"))
+            {
+                UnityEditor.MemoryProfiler.MemorySnapshot.RequestNewSnapshot();
+            }
             if (GUILayout.Button("Save Snapshot..."))
             {
-                if (_snapshot != null) {
-                    string fileName = EditorUtility.SaveFilePanel ("Save Snapshot", null, "MemorySnapshot", "memsnap");
-                    if (!string.IsNullOrEmpty (fileName)) {
-                        System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter ();
-                        using (Stream stream = File.Open (fileName, FileMode.Create)) {
-                            bf.Serialize (stream, _snapshot);
+                if (_snapshot != null)
+                {
+                    string fileName = EditorUtility.SaveFilePanel("Save Snapshot", null, "MemorySnapshot", "memsnap");
+                    if (!string.IsNullOrEmpty(fileName))
+                    {
+                        System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+                        using (Stream stream = File.Open(fileName, FileMode.Create))
+                        {
+                            bf.Serialize(stream, _snapshot);
                         }
                     }
-                } else {
-                    UnityEngine.Debug.LogWarning ("No snapshot to save.  Try taking a snapshot first.");
+                }
+                else
+                {
+                    UnityEngine.Debug.LogWarning("No snapshot to save.  Try taking a snapshot first.");
                 }
             }
             if (GUILayout.Button("Load Snapshot..."))
             {
-                string fileName = EditorUtility.OpenFilePanel ("Load Snapshot", null, "memsnap");
-                if (!string.IsNullOrEmpty (fileName)) {
-                    System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter ();
-                    using (Stream stream = File.Open (fileName, FileMode.Open)) {
-                        IncomingSnapshot (bf.Deserialize (stream) as PackedMemorySnapshot);
+                string fileName = EditorUtility.OpenFilePanel("Load Snapshot", null, "memsnap");
+                if (!string.IsNullOrEmpty(fileName))
+                {
+                    System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+                    using (Stream stream = File.Open(fileName, FileMode.Open))
+                    {
+                        IncomingSnapshot(bf.Deserialize(stream) as PackedMemorySnapshot);
                     }
                 }
             }
-            GUILayout.EndHorizontal ();
-			if (_treeMapView != null)
-				_treeMapView.Draw();
-			if (_inspector != null)
-				_inspector.Draw();
+            GUILayout.EndHorizontal();
+            if (_treeMapView != null)
+                _treeMapView.Draw();
+            if (_inspector != null)
+                _inspector.Draw();
 
-			//RenderDebugList();
-		}
+            //RenderDebugList();
+        }
 
-		public void SelectThing(ThingInMemory thing)
-		{
-			_inspector.SelectThing(thing);
-			_treeMapView.SelectThing(thing);
-		}
+        public void SelectThing(ThingInMemory thing)
+        {
+            _inspector.SelectThing(thing);
+            _treeMapView.SelectThing(thing);
+        }
 
-		private void RenderDebugList()
-		{
-			_scrollPosition = GUILayout.BeginScrollView(_scrollPosition);
+        private void RenderDebugList()
+        {
+            _scrollPosition = GUILayout.BeginScrollView(_scrollPosition);
 
-			foreach (var thing in _unpackedCrawl.allObjects)
-			{
-				var mo = thing as ManagedObject;
-				if (mo != null)
-					GUILayout.Label("MO: " + mo.typeDescription.name);
+            foreach (var thing in _unpackedCrawl.allObjects)
+            {
+                var mo = thing as ManagedObject;
+                if (mo != null)
+                    GUILayout.Label("MO: " + mo.typeDescription.name);
 
-				var gch = thing as GCHandle;
-				if (gch != null)
-					GUILayout.Label("GCH: " + gch.caption);
+                var gch = thing as GCHandle;
+                if (gch != null)
+                    GUILayout.Label("GCH: " + gch.caption);
 
-				var sf = thing as StaticFields;
-				if (sf != null)
-					GUILayout.Label("SF: " + sf.typeDescription.name);
-			}
+                var sf = thing as StaticFields;
+                if (sf != null)
+                    GUILayout.Label("SF: " + sf.typeDescription.name);
+            }
 
-			GUILayout.EndScrollView();
-		}
+            GUILayout.EndScrollView();
+        }
 
-		void Unpack()
-		{
-			_unpackedCrawl = CrawlDataUnpacker.Unpack(_packedCrawled);
-			_inspector = new Inspector(this, _unpackedCrawl, _snapshot);
-			_treeMapView = new TreeMapView(this, _unpackedCrawl);
-		}
+        void Unpack()
+        {
+            _unpackedCrawl = CrawlDataUnpacker.Unpack(_packedCrawled);
+            _inspector = new Inspector(this, _unpackedCrawl, _snapshot);
+            _treeMapView = new TreeMapView(this, _unpackedCrawl);
+        }
 
-		void IncomingSnapshot(PackedMemorySnapshot snapshot)
-		{
-			_snapshot = snapshot;
+        void IncomingSnapshot(PackedMemorySnapshot snapshot)
+        {
+            _snapshot = snapshot;
 
-			_packedCrawled = new Crawler().Crawl(_snapshot);
-			Unpack();
-		}
-	}
+            _packedCrawled = new Crawler().Crawl(_snapshot);
+            Unpack();
+        }
+    }
 }
