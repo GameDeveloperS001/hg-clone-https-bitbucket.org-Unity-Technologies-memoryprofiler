@@ -1,10 +1,12 @@
 using System;
+using NUnit.Framework.Constraints;
 using UnityEngine;
 using System.Collections.Generic;
 using Treemap;
 using UnityEditor;
 using Assets.Editor.Treemap;
 using System.Linq;
+using UnityEngine.UI;
 
 namespace MemoryProfilerWindow
 {
@@ -16,8 +18,12 @@ namespace MemoryProfilerWindow
         private List<Item> _items = new List<Item>();
         private List<Mesh> _cachedMeshes = new List<Mesh>();
         private Item _selectedItem;
+        private Group _selectedGroup;
         private Item _mouseDownItem;
+
         MemoryProfilerWindow _hostWindow;
+
+        private Vector2 mouseTreemapPosition { get { return _ZoomArea.ViewToDrawingTransformPoint(Event.current.mousePosition); } }
 
         public TreeMapView(MemoryProfilerWindow hostWindow, CrawledMemorySnapshot _unpackedCrawl)
         {
@@ -42,35 +48,6 @@ namespace MemoryProfilerWindow
 
         public void Draw()
         {
-            if ((Event.current.type == EventType.MouseDown || Event.current.type == EventType.MouseUp) && Event.current.button == 0)
-            {
-                if (_ZoomArea.drawRect.Contains(Event.current.mousePosition))
-                {
-                    var mousepos = Event.current.mousePosition;
-                    mousepos.y -= 25;
-                    var pos = _ZoomArea.ViewToDrawingTransformPoint(mousepos);
-                    var firstOrDefault = _items.FirstOrDefault(i => i._position.Contains(pos));
-                    if (firstOrDefault != null)
-                    {
-                        switch (Event.current.type)
-                        {
-                            case EventType.MouseDown:
-                                _mouseDownItem = firstOrDefault;
-                                break;
-
-                            case EventType.MouseUp:
-                                if (_mouseDownItem == firstOrDefault)
-                                {
-                                    _hostWindow.SelectThing(firstOrDefault._thingInMemory);
-                                    Event.current.Use();
-                                    return;
-                                }
-                                break;
-                        }
-                    }
-                }
-            }
-
             Rect r = new Rect(0f, 25f, _hostWindow.position.width - _hostWindow._inspector.width, _hostWindow.position.height - 25f);
 
             _ZoomArea.rect = r;
@@ -78,17 +55,70 @@ namespace MemoryProfilerWindow
 
             GUI.BeginGroup(r);
             Handles.matrix = _ZoomArea.drawingToViewMatrix;
+            HandleMouseClick();
             RenderTreemap();
             GUI.EndGroup();
 
             _ZoomArea.EndViewGUI();
-            _hostWindow.Repaint();
+        }
+
+        private void OnHoveredGroupChanged()
+        {
+            RefreshCachedRects(false);
+        }
+
+        private void HandleMouseClick()
+        {
+            if ((Event.current.type == EventType.MouseDown || Event.current.type == EventType.MouseUp) && Event.current.button == 0)
+            {
+                if (_ZoomArea.drawRect.Contains(Event.current.mousePosition))
+                {
+                    Group group = _groups.Values.FirstOrDefault(i => i._position.Contains(mouseTreemapPosition));
+                    Item item = _items.FirstOrDefault(i => i._position.Contains(mouseTreemapPosition));
+
+                    if (item != null && _selectedGroup == item._group)
+                    {
+                        switch (Event.current.type)
+                        {
+                            case EventType.MouseDown:
+                                _mouseDownItem = item;
+                                break;
+
+                            case EventType.MouseUp:
+                                if (_mouseDownItem == item)
+                                {
+                                    _hostWindow.SelectThing(item._thingInMemory);
+                                    Event.current.Use();
+                                }
+                                break;
+                        }
+                    }
+                    else if (group != null)
+                    {
+                        switch (Event.current.type)
+                        {
+                            case EventType.MouseUp:
+                                _hostWindow.SelectGroup(group);
+                                Event.current.Use();
+                                break;
+                        }                        
+                    }
+                }
+            }
         }
 
         public void SelectThing(ThingInMemory thing)
         {
             _selectedItem = _items.First(i => i._thingInMemory == thing);
-            RefreshMesh();
+            _selectedGroup = _selectedItem._group;
+            RefreshCachedRects(false);
+        }
+
+        public void SelectGroup(Group group)
+        {
+            _selectedItem = null;
+            _selectedGroup = group;
+            RefreshCachedRects(false);
         }
 
         void RefreshCaches()
@@ -121,33 +151,41 @@ namespace MemoryProfilerWindow
             }
 
             _items.Sort();
-            RefreshCachedRects();
+            RefreshCachedRects(true);
         }
 
-        private void RefreshCachedRects()
+        private void RefreshCachedRects(bool fullRefresh)
         {
             Rect space = new Rect(-100f, -100f, 200f, 200f);
 
-            List<Group> groups = _groups.Values.ToList();
-            groups.Sort();
-            float[] groupTotalValues = new float[groups.Count];
-            for (int i = 0; i < groups.Count; i++)
+            if (fullRefresh)
             {
-                groupTotalValues[i] = groups.ElementAt(i).totalMemorySize;
-            }
-
-            Rect[] groupRects = Utility.GetTreemapRects(groupTotalValues, space);
-            for (int groupIndex = 0; groupIndex < groupRects.Length; groupIndex++)
-            {
-                Group group = groups[groupIndex];
-                group._position = groupRects[groupIndex];
-                Rect[] rects = Utility.GetTreemapRects(group.memorySizes, groupRects[groupIndex]);
-                for (int i = 0; i < rects.Length; i++)
+                List<Group> groups = _groups.Values.ToList();
+                groups.Sort();
+                float[] groupTotalValues = new float[groups.Count];
+                for (int i = 0; i < groups.Count; i++)
                 {
-                    group._items[i]._position = rects[i];
+                    groupTotalValues[i] = groups.ElementAt(i).totalMemorySize;
+                }
+
+                Rect[] groupRects = Utility.GetTreemapRects(groupTotalValues, space);
+                for (int groupIndex = 0; groupIndex < groupRects.Length; groupIndex++)
+                {
+                    Group group = groups[groupIndex];
+                    group._position = groupRects[groupIndex];
                 }
             }
 
+            if (_selectedGroup != null)
+            {
+                Rect[] rects = Utility.GetTreemapRects(_selectedGroup.memorySizes, _selectedGroup._position);
+
+                for (int i = 0; i < rects.Length; i++)
+                {
+                    _selectedGroup._items[i]._position = rects[i];
+                }
+            }
+            
             RefreshMesh();
         }
 
@@ -173,16 +211,33 @@ namespace MemoryProfilerWindow
 
             int meshItemIndex = 0;
             int totalItemIndex = 0;
-            foreach (Item item in _items)
+
+            List<ITreemapRenderable> visible = new List<ITreemapRenderable>();
+            foreach (Group group in _groups.Values)
+            {
+                if (group != _selectedGroup)
+                {
+                    visible.Add(group);
+                }
+                else
+                {
+                    foreach (Item item in group._items)
+                    {
+                        visible.Add(item);
+                    }
+                }
+            }
+
+            foreach (ITreemapRenderable item in visible)
             {
                 int index = meshItemIndex * 4;
-                vertices[index++] = new Vector3(item._position.xMin, item._position.yMin, 0f);
-                vertices[index++] = new Vector3(item._position.xMax, item._position.yMin, 0f);
-                vertices[index++] = new Vector3(item._position.xMax, item._position.yMax, 0f);
-                vertices[index++] = new Vector3(item._position.xMin, item._position.yMax, 0f);
+                vertices[index++] = new Vector3(item.GetPosition().xMin, item.GetPosition().yMin, 0f);
+                vertices[index++] = new Vector3(item.GetPosition().xMax, item.GetPosition().yMin, 0f);
+                vertices[index++] = new Vector3(item.GetPosition().xMax, item.GetPosition().yMax, 0f);
+                vertices[index++] = new Vector3(item.GetPosition().xMin, item.GetPosition().yMax, 0f);
 
                 index = meshItemIndex * 4;
-                var color = item.color;
+                var color = item.GetColor();
                 if (item == _selectedItem)
                     color *= 1.5f;
 
@@ -202,7 +257,7 @@ namespace MemoryProfilerWindow
                 meshItemIndex++;
                 totalItemIndex++;
 
-                if (meshItemIndex >= maxVerts / 4 || totalItemIndex == _items.Count)
+                if (meshItemIndex >= maxVerts / 4 || totalItemIndex == visible.Count)
                 {
                     Mesh mesh = new Mesh();
                     mesh.hideFlags = HideFlags.HideAndDontSave;
@@ -246,18 +301,13 @@ namespace MemoryProfilerWindow
             {
                 if (Utility.IsInside(group._position, _ZoomArea.shownArea))
                 {
-                    foreach (Item item in group._items)
+                    if (_selectedItem != null && _selectedItem._group == group)
                     {
-                        Vector3 p1 = mat.MultiplyPoint(new Vector3(item._position.xMin, item._position.yMin));
-                        Vector3 p2 = mat.MultiplyPoint(new Vector3(item._position.xMax, item._position.yMax));
-
-                        if (p2.x - p1.x > 30f)
-                        {
-                            Rect rect = new Rect(p1.x, p2.y, p2.x - p1.x, p1.y - p2.y);
-                            string row1 = item._group._name;
-                            string row2 = EditorUtility.FormatBytes(item.memorySize);
-                            GUI.Label(rect, row1 + "\n" + row2);
-                        }
+                        RenderGroupItems(group);
+                    }
+                    else
+                    {
+                        RenderGroupLabel(group);
                     }
                 }
             }
@@ -265,12 +315,48 @@ namespace MemoryProfilerWindow
             GUI.color = Color.white;
         }
 
+        private void RenderGroupLabel(Group group)
+        {
+            Matrix4x4 mat = _ZoomArea.drawingToViewMatrix;
+
+            Vector3 p1 = mat.MultiplyPoint(new Vector3(group._position.xMin, group._position.yMin));
+            Vector3 p2 = mat.MultiplyPoint(new Vector3(group._position.xMax, group._position.yMax));
+
+            if (p2.x - p1.x > 30f)
+            {
+                Rect rect = new Rect(p1.x, p2.y, p2.x - p1.x, p1.y - p2.y);
+                GUI.Label(rect, group.GetLabel());
+            }
+        }
+
+        private void RenderGroupItems(Group group)
+        {
+            Matrix4x4 mat = _ZoomArea.drawingToViewMatrix;
+            
+            foreach (Item item in group._items)
+            {
+                if (Utility.IsInside(item._position, _ZoomArea.shownArea))
+                {
+                    Vector3 p1 = mat.MultiplyPoint(new Vector3(item._position.xMin, item._position.yMin));
+                    Vector3 p2 = mat.MultiplyPoint(new Vector3(item._position.xMax, item._position.yMax));
+
+                    if (p2.x - p1.x > 30f)
+                    {
+                        Rect rect = new Rect(p1.x, p2.y, p2.x - p1.x, p1.y - p2.y);
+                        string row1 = item._group._name;
+                        string row2 = EditorUtility.FormatBytes(item.memorySize);
+                        GUI.Label(rect, row1 + "\n" + row2);
+                    }
+                }
+            }
+        }
+
         public string GetGroupName(ThingInMemory thing)
         {
             if (thing is NativeUnityEngineObject)
                 return (thing as NativeUnityEngineObject).className;
-            //			if (thing is ManagedObject)
-            //				return (thing as ManagedObject).typeDescription.name;
+                    if (thing is ManagedObject)
+                        return (thing as ManagedObject).typeDescription.name;
             return thing.GetType().FullName;
         }
     }

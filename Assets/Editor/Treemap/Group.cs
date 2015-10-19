@@ -4,17 +4,18 @@ using System.Linq;
 using System.Text;
 using Assets.Editor.Treemap;
 using MemoryProfilerWindow;
+using UnityEditor;
 using UnityEngine;
 
 namespace Treemap
 {
-    public class Group : IComparable<Group>
+    public class Group : IComparable<Group>, ITreemapRenderable
     {
         public string _name;
         public Rect _position;
         public List<Item> _items;
         private float _totalMemorySize = -1;
-
+        
         public float totalMemorySize
         {
             get
@@ -22,7 +23,7 @@ namespace Treemap
                 if (_totalMemorySize != -1)
                     return _totalMemorySize;
 
-                float result = 0f;
+                long result = 0;
                 foreach (Item item in _items)
                 {
                     result += item.memorySize;
@@ -53,6 +54,23 @@ namespace Treemap
         public int CompareTo(Group other)
         {
             return (int)(other.totalMemorySize - totalMemorySize);
+        }
+
+        public Color GetColor()
+        {
+            return color;
+        }
+
+        public Rect GetPosition()
+        {
+            return _position;
+        }
+
+        public string GetLabel()
+        {
+            string row1 = _name;
+            string row2 = EditorUtility.FormatBytes((long)totalMemorySize);
+            return row1 + "\n" + row2;
         }
     }
 }

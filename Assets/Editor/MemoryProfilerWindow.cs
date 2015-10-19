@@ -45,7 +45,7 @@ namespace MemoryProfilerWindow
 
         public void OnDisable()
         {
-            //	UnityEditor.MemoryProfiler.MemorySnapshot.OnSnapshotReceived -= IncomingSnapshot;
+            //    UnityEditor.MemoryProfiler.MemorySnapshot.OnSnapshotReceived -= IncomingSnapshot;
         }
 
         public void Initialize()
@@ -113,6 +113,11 @@ namespace MemoryProfilerWindow
         {
             _inspector.SelectThing(thing);
             _treeMapView.SelectThing(thing);
+        }
+
+        public void SelectGroup(Group group)
+        {
+            _treeMapView.SelectGroup(group);
         }
 
         private void RenderDebugList()

@@ -169,8 +169,7 @@ namespace Treemap
 
         public static bool IsInside(Rect lhs, Rect rhs)
         {
-            bool result = lhs.xMax > rhs.xMin && lhs.xMin<rhs.xMax && lhs.yMax> rhs.yMin && lhs.yMin < rhs.yMax;
-            return result;
+            return lhs.xMax > rhs.xMin && lhs.xMin < rhs.xMax && lhs.yMax > rhs.yMin && lhs.yMin < rhs.yMax;
         }
     }
 }
