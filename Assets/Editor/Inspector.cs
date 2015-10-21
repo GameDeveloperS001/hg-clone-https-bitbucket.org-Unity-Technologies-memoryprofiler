@@ -68,8 +68,8 @@ namespace MemoryProfilerWindow
                     EditorGUILayout.LabelField("isDontDestroyOnLoad", nativeObject.isDontDestroyOnLoad.ToString());
                     EditorGUILayout.LabelField("isPersistent", nativeObject.isPersistent.ToString());
                     EditorGUILayout.LabelField("isManager", nativeObject.isManager.ToString());
-					EditorGUILayout.LabelField("hideFlags", nativeObject.hideFlags.ToString());
-					EditorGUILayout.LabelField("hideFlags", nativeObject.size.ToString());
+                    EditorGUILayout.LabelField("hideFlags", nativeObject.hideFlags.ToString());
+                    EditorGUILayout.LabelField("hideFlags", nativeObject.size.ToString());
                 }
 
                 var managedObject = _selectedThing as ManagedObject;
@@ -78,10 +78,10 @@ namespace MemoryProfilerWindow
                     GUILayout.Label("ManagedObject");
                     EditorGUILayout.LabelField("Type", managedObject.typeDescription.name);
                     EditorGUILayout.LabelField("Address", managedObject.address.ToString("X"));
-					EditorGUILayout.LabelField("size", managedObject.size.ToString());
+                    EditorGUILayout.LabelField("size", managedObject.size.ToString());
 
                     if (managedObject.typeDescription.name == "System.String")
-						EditorGUILayout.LabelField("value", StringTools.ReadString(_unpackedCrawl.managedHeap.Find(managedObject.address, _unpackedCrawl.virtualMachineInformation), _unpackedCrawl.virtualMachineInformation));
+                        EditorGUILayout.LabelField("value", StringTools.ReadString(_unpackedCrawl.managedHeap.Find(managedObject.address, _unpackedCrawl.virtualMachineInformation), _unpackedCrawl.virtualMachineInformation));
                     DrawFields(managedObject);
 
                     if (managedObject.typeDescription.isArray)
@@ -93,7 +93,7 @@ namespace MemoryProfilerWindow
                 if (_selectedThing is GCHandle)
                 {
                     GUILayout.Label("GCHandle");
-					EditorGUILayout.LabelField("size", _selectedThing.size.ToString());
+                    EditorGUILayout.LabelField("size", _selectedThing.size.ToString());
                 }
 
                 var staticFields = _selectedThing as StaticFields;
@@ -101,7 +101,7 @@ namespace MemoryProfilerWindow
                 {
                     GUILayout.Label("Static Fields");
                     GUILayout.Label("Of type: " + staticFields.typeDescription.name);
-					GUILayout.Label("size: " + staticFields.size);
+                    GUILayout.Label("size: " + staticFields.size);
 
                     DrawFields(staticFields.typeDescription, new BytesAndOffset() { bytes = staticFields.typeDescription.staticFieldBytes, offset = 0}, true);
                 }
@@ -146,7 +146,7 @@ namespace MemoryProfilerWindow
         private void DrawArray(ManagedObject managedObject)
         {
             var typeDescription = managedObject.typeDescription;
-			int elementCount = ArrayTools.ReadArrayLength(_unpackedCrawl.managedHeap, managedObject.address, typeDescription, _unpackedCrawl.virtualMachineInformation);
+            int elementCount = ArrayTools.ReadArrayLength(_unpackedCrawl.managedHeap, managedObject.address, typeDescription, _unpackedCrawl.virtualMachineInformation);
             GUILayout.Label("element count: " + elementCount);
             int rank = typeDescription.arrayRank;
             GUILayout.Label("arrayRank: " + rank);
@@ -173,7 +173,7 @@ namespace MemoryProfilerWindow
         private void DrawFields(TypeDescription typeDescription, BytesAndOffset bytesAndOffset, bool useStatics = false)
         {
             int counter = 0;
-            foreach (var field in typeDescription.fields.Where(f => f.isStatic == useStatics))
+            foreach (var field in TypeTools.AllFieldsOf(typeDescription, _unpackedCrawl.typeDescriptions).Where(f => f.isStatic == useStatics))
             {
                 counter++;
                 var gUIStyle = counter % 2 == 0 ? Styles.entryEven : Styles.entryOdd;
@@ -307,7 +307,7 @@ namespace MemoryProfilerWindow
 
                 var managedObject = rb as ManagedObject;
                 if (managedObject != null && managedObject.typeDescription.name == "System.String")
-					caption = StringTools.ReadString(_unpackedCrawl.managedHeap.Find(managedObject.address, _unpackedCrawl.virtualMachineInformation),_unpackedCrawl.virtualMachineInformation);
+                    caption = StringTools.ReadString(_unpackedCrawl.managedHeap.Find(managedObject.address, _unpackedCrawl.virtualMachineInformation), _unpackedCrawl.virtualMachineInformation);
 
                 if (GUILayout.Button(caption))
                     _hostWindow.SelectThing(rb);
