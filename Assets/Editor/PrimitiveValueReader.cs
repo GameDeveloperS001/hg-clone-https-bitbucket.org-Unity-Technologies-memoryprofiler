@@ -4,7 +4,6 @@ using UnityEngine;
 
 namespace MemoryProfilerWindow
 {
-
     class PrimitiveValueReader
     {
         private readonly VirtualMachineInformation _virtualMachineInformation;

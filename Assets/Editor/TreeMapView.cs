@@ -101,7 +101,7 @@ namespace MemoryProfilerWindow
                                 _hostWindow.SelectGroup(group);
                                 Event.current.Use();
                                 break;
-                        }                        
+                        }
                     }
                 }
             }
@@ -185,7 +185,7 @@ namespace MemoryProfilerWindow
                     _selectedGroup._items[i]._position = rects[i];
                 }
             }
-            
+
             RefreshMesh();
         }
 
@@ -332,7 +332,7 @@ namespace MemoryProfilerWindow
         private void RenderGroupItems(Group group)
         {
             Matrix4x4 mat = _ZoomArea.drawingToViewMatrix;
-            
+
             foreach (Item item in group._items)
             {
                 if (Utility.IsInside(item._position, _ZoomArea.shownArea))
@@ -355,8 +355,8 @@ namespace MemoryProfilerWindow
         {
             if (thing is NativeUnityEngineObject)
                 return (thing as NativeUnityEngineObject).className;
-                    if (thing is ManagedObject)
-                        return (thing as ManagedObject).typeDescription.name;
+            if (thing is ManagedObject)
+                return (thing as ManagedObject).typeDescription.name;
             return thing.GetType().FullName;
         }
     }
