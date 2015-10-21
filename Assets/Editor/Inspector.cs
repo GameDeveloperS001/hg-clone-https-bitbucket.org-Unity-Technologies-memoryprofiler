@@ -68,7 +68,8 @@ namespace MemoryProfilerWindow
                     EditorGUILayout.LabelField("isDontDestroyOnLoad", nativeObject.isDontDestroyOnLoad.ToString());
                     EditorGUILayout.LabelField("isPersistent", nativeObject.isPersistent.ToString());
                     EditorGUILayout.LabelField("isManager", nativeObject.isManager.ToString());
-                    EditorGUILayout.LabelField("hideFlags", nativeObject.hideFlags.ToString());
+					EditorGUILayout.LabelField("hideFlags", nativeObject.hideFlags.ToString());
+					EditorGUILayout.LabelField("hideFlags", nativeObject.size.ToString());
                 }
 
                 var managedObject = _selectedThing as ManagedObject;
@@ -76,7 +77,8 @@ namespace MemoryProfilerWindow
                 {
                     GUILayout.Label("ManagedObject");
                     EditorGUILayout.LabelField("Type", managedObject.typeDescription.name);
-                    EditorGUILayout.LabelField("Address", managedObject.address.ToString());
+                    EditorGUILayout.LabelField("Address", managedObject.address.ToString("X"));
+					EditorGUILayout.LabelField("size", managedObject.size.ToString());
 
                     if (managedObject.typeDescription.name == "System.String")
 						EditorGUILayout.LabelField("value", StringTools.ReadString(_unpackedCrawl.managedHeap.Find(managedObject.address, _unpackedCrawl.virtualMachineInformation), _unpackedCrawl.virtualMachineInformation));
@@ -91,6 +93,7 @@ namespace MemoryProfilerWindow
                 if (_selectedThing is GCHandle)
                 {
                     GUILayout.Label("GCHandle");
+					EditorGUILayout.LabelField("size", _selectedThing.size.ToString());
                 }
 
                 var staticFields = _selectedThing as StaticFields;
@@ -98,6 +101,7 @@ namespace MemoryProfilerWindow
                 {
                     GUILayout.Label("Static Fields");
                     GUILayout.Label("Of type: " + staticFields.typeDescription.name);
+					GUILayout.Label("size: " + staticFields.size);
 
                     DrawFields(staticFields.typeDescription, new BytesAndOffset() { bytes = staticFields.typeDescription.staticFieldBytes, offset = 0}, true);
                 }
