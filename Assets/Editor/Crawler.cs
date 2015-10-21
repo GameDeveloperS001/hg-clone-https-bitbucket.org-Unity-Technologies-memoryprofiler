@@ -11,11 +11,13 @@ namespace MemoryProfilerWindow
 
         private Dictionary<int, UInt64> _pointer2Backups = new Dictionary<int, ulong>();
         private VirtualMachineInformation _virtualMachineInformation;
+		private TypeDescription[] _typeDescriptions;
 
         public PackedCrawlerData Crawl(PackedMemorySnapshot input)
         {
             _typeInfoToTypeDescription = input.typeDescriptions.ToDictionary(td => td.typeInfoAddress, td => td);
             _virtualMachineInformation = input.virtualMachineInformation;
+			_typeDescriptions = input.typeDescriptions;
 
             var result = new PackedCrawlerData(input);
 
@@ -120,10 +122,11 @@ namespace MemoryProfilerWindow
                     continue;
                 }
 
+				//temporary workaround for a bug in 5.3b4 and earlier where we would get literals returned as fields with offset 0. soon we'll be able to remove this code.
                 bool gotException = false;
                 try
                 {
-                    ulong pointer = fieldLocation.ReadPointer();
+                    fieldLocation.ReadPointer();
                 }
                 catch (ArgumentException)
                 {
@@ -148,7 +151,7 @@ namespace MemoryProfilerWindow
             UInt64 typeInfoAddress;
             int indexOfObject;
             bool wasAlreadyCrawled;
-            ParseObjectHeader(startIndices, bo, pointer, out typeInfoAddress, out indexOfObject, out wasAlreadyCrawled, out_managedObjects);
+			ParseObjectHeader(startIndices, packedMemorySnapshot.managedHeapSections, pointer, out typeInfoAddress, out indexOfObject, out wasAlreadyCrawled, out_managedObjects);
 
             out_connections.Add(new Connection() {from = indexOfFrom, to = indexOfObject});
 
@@ -163,7 +166,7 @@ namespace MemoryProfilerWindow
                 return;
             }
 
-            var arrayLength = packedMemorySnapshot.managedHeapSections.ReadArrayLength(pointer, typeDescription, _virtualMachineInformation);
+			var arrayLength = ArrayTools.ReadArrayLength(packedMemorySnapshot.managedHeapSections, pointer, typeDescription, _virtualMachineInformation);
             var elementType = packedMemorySnapshot.typeDescriptions[typeDescription.baseOrElementTypeIndex];
             var cursor = bo.Add(_virtualMachineInformation.arrayHeaderSize);
             for (int i = 0; i != arrayLength; i++)
@@ -181,8 +184,22 @@ namespace MemoryProfilerWindow
             }
         }
 
-        private void ParseObjectHeader(StartIndices startIndices, BytesAndOffset bo, ulong originalHeapAddress, out ulong typeInfoAddress, out int indexOfObject, out bool wasAlreadyCrawled, List<PackedManagedObject> outManagedObjects)
+		int SizeOfObjectInBytes (TypeDescription typeDescription, BytesAndOffset bo, MemorySection[] heap, ulong address)
+		{
+			if (typeDescription.isArray)
+				return ArrayTools.ReadArrayObjectSizeInBytes (heap, address, typeDescription, _typeDescriptions, _virtualMachineInformation);
+
+			if (typeDescription.name == "System.String")
+				return StringTools.ReadStringObjectSizeInBytes (bo, _virtualMachineInformation);
+
+			//array and string are the only types that are special, all other types just have one size, which is stored in the typedescription
+			return typeDescription.size;
+		}
+
+		private void ParseObjectHeader(StartIndices startIndices, MemorySection[] heap, ulong originalHeapAddress, out ulong typeInfoAddress, out int indexOfObject, out bool wasAlreadyCrawled, List<PackedManagedObject> outManagedObjects)
         {
+			var bo = heap.Find (originalHeapAddress, _virtualMachineInformation);
+
             var pointer1 = bo.ReadPointer();
             var pointer2 = bo.NextPointer();
 
@@ -192,8 +209,11 @@ namespace MemoryProfilerWindow
                 indexOfObject = outManagedObjects.Count + startIndices.OfFirstManagedObject;
                 typeInfoAddress = pointer1;
                 var typeDescription = _typeInfoToTypeDescription[pointer1];
-                var size = typeDescription.isArray ? 0 : typeDescription.size;
-                outManagedObjects.Add(new PackedManagedObject() { address = originalHeapAddress, size = size, typeIndex = typeDescription.typeIndex });
+
+
+				var size = SizeOfObjectInBytes (typeDescription, bo, heap, originalHeapAddress);
+
+				outManagedObjects.Add(new PackedManagedObject() { address = originalHeapAddress, size = size, typeIndex = typeDescription.typeIndex });
 
                 //okay, we gathered all information, now lets set the mark bit, and store the index for this object in the 2nd pointer of the header, which is rarely used.
                 bo.WritePointer(pointer1 | 1);

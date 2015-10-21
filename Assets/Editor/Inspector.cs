@@ -79,7 +79,7 @@ namespace MemoryProfilerWindow
                     EditorGUILayout.LabelField("Address", managedObject.address.ToString());
 
                     if (managedObject.typeDescription.name == "System.String")
-                        EditorGUILayout.LabelField("value", _primitiveValueReader.ReadString(_unpackedCrawl.managedHeap.Find(managedObject.address, _unpackedCrawl.virtualMachineInformation)));
+						EditorGUILayout.LabelField("value", StringTools.ReadString(_unpackedCrawl.managedHeap.Find(managedObject.address, _unpackedCrawl.virtualMachineInformation), _unpackedCrawl.virtualMachineInformation));
                     DrawFields(managedObject);
 
                     if (managedObject.typeDescription.isArray)
@@ -142,7 +142,7 @@ namespace MemoryProfilerWindow
         private void DrawArray(ManagedObject managedObject)
         {
             var typeDescription = managedObject.typeDescription;
-            int elementCount = _unpackedCrawl.managedHeap.ReadArrayLength(managedObject.address, typeDescription, _unpackedCrawl.virtualMachineInformation);
+			int elementCount = ArrayTools.ReadArrayLength(_unpackedCrawl.managedHeap, managedObject.address, typeDescription, _unpackedCrawl.virtualMachineInformation);
             GUILayout.Label("element count: " + elementCount);
             int rank = typeDescription.arrayRank;
             GUILayout.Label("arrayRank: " + rank);
@@ -303,7 +303,7 @@ namespace MemoryProfilerWindow
 
                 var managedObject = rb as ManagedObject;
                 if (managedObject != null && managedObject.typeDescription.name == "System.String")
-                    caption = _primitiveValueReader.ReadString(_unpackedCrawl.managedHeap.Find(managedObject.address, _unpackedCrawl.virtualMachineInformation));
+					caption = StringTools.ReadString(_unpackedCrawl.managedHeap.Find(managedObject.address, _unpackedCrawl.virtualMachineInformation),_unpackedCrawl.virtualMachineInformation);
 
                 if (GUILayout.Button(caption))
                     _hostWindow.SelectThing(rb);
