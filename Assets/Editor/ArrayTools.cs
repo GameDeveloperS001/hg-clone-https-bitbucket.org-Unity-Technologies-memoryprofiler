@@ -16,10 +16,10 @@ namespace MemoryProfilerWindow
 				return bo.Add(virtualMachineInformation.arraySizeOffsetInHeader).ReadInt32();
 
 			var cursor = heap.Find(bounds, virtualMachineInformation);
-			int length = 0;
+			int length = 1;
 			for (int i = 0; i != arrayType.arrayRank; i++)
 			{
-				length += cursor.ReadInt32();
+				length *= cursor.ReadInt32();
 				cursor = cursor.Add(8);
 			}
 			return length;
