@@ -8,6 +8,9 @@ namespace MemoryProfilerWindow
 	{
 		static public IEnumerable<FieldDescription> AllFieldsOf (TypeDescription typeDescription, TypeDescription[] typeDescriptions)
 		{
+			if (typeDescription.isArray)
+				yield break;
+			
 			if (typeDescription.baseOrElementTypeIndex != -1) {
 				var baseTypeDescription = typeDescriptions [typeDescription.baseOrElementTypeIndex];
 				foreach(var field in AllFieldsOf(baseTypeDescription, typeDescriptions))

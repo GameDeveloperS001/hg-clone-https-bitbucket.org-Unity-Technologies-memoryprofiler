@@ -173,7 +173,8 @@ namespace MemoryProfilerWindow
         private void DrawFields(TypeDescription typeDescription, BytesAndOffset bytesAndOffset, bool useStatics = false)
         {
             int counter = 0;
-            foreach (var field in TypeTools.AllFieldsOf(typeDescription, _unpackedCrawl.typeDescriptions).Where(f => f.isStatic == useStatics))
+		
+			foreach (var field in TypeTools.AllFieldsOf(typeDescription, _unpackedCrawl.typeDescriptions).Where(f => f.isStatic == useStatics))
             {
                 counter++;
                 var gUIStyle = counter % 2 == 0 ? Styles.entryEven : Styles.entryOdd;
@@ -191,6 +192,8 @@ namespace MemoryProfilerWindow
 
         private void DrawFields(ManagedObject managedObject)
         {
+			if (managedObject.typeDescription.isArray)
+				return;
             GUILayout.Space(10);
             GUILayout.Label("Fields:");
             DrawFields(managedObject.typeDescription, _unpackedCrawl.managedHeap.Find(managedObject.address, _unpackedCrawl.virtualMachineInformation));
@@ -238,6 +241,9 @@ namespace MemoryProfilerWindow
                 case "System.Double":
                     GUILayout.Label(_primitiveValueReader.ReadDouble(bytesAndOffset).ToString());
                     break;
+				case "System.IntPtr":
+					GUILayout.Label(_primitiveValueReader.ReadPointer(bytesAndOffset).ToString("X"));
+					break;
                 default:
 
                     if (!typeDescription.isValueType)
@@ -299,11 +305,11 @@ namespace MemoryProfilerWindow
             GUI.skin.button.alignment = TextAnchor.UpperLeft;
             foreach (var rb in thingInMemories)
             {
-                EditorGUI.BeginDisabledGroup(rb == _selectedThing);
+				EditorGUI.BeginDisabledGroup(rb == _selectedThing || rb == null);
 
                 GUI.backgroundColor = ColorFor(rb);
 
-                var caption = rb.caption;
+				var caption = rb == null ? "null" : rb.caption;
 
                 var managedObject = rb as ManagedObject;
                 if (managedObject != null && managedObject.typeDescription.name == "System.String")
@@ -318,6 +324,8 @@ namespace MemoryProfilerWindow
 
         private Color ColorFor(ThingInMemory rb)
         {
+			if (rb == null)
+				return Color.gray;
             if (rb is NativeUnityEngineObject)
                 return Color.red;
             if (rb is ManagedObject)
