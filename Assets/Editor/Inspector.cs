@@ -103,7 +103,7 @@ namespace MemoryProfilerWindow
                     GUILayout.Label("Of type: " + staticFields.typeDescription.name);
                     GUILayout.Label("size: " + staticFields.size);
 
-                    DrawFields(staticFields.typeDescription, new BytesAndOffset() { bytes = staticFields.typeDescription.staticFieldBytes, offset = 0}, true);
+					DrawFields(staticFields.typeDescription, new BytesAndOffset() { bytes = staticFields.typeDescription.staticFieldBytes, offset = 0, pointerSize = _unpackedCrawl.virtualMachineInformation.pointerSize}, true);
                 }
 
                 if (managedObject == null)
