@@ -357,7 +357,7 @@ namespace MemoryProfilerWindow
 				return (thing as NativeUnityEngineObject).className ?? "MissingName";
             if (thing is ManagedObject)
                 return (thing as ManagedObject).typeDescription.name;
-            return thing.GetType().FullName;
+            return thing.GetType().Name;
         }
     }
 }
