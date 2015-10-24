@@ -353,8 +353,8 @@ namespace MemoryProfilerWindow
 
         public string GetGroupName(ThingInMemory thing)
         {
-            if (thing is NativeUnityEngineObject)
-                return (thing as NativeUnityEngineObject).className;
+			if (thing is NativeUnityEngineObject)
+				return (thing as NativeUnityEngineObject).className ?? "MissingName";
             if (thing is ManagedObject)
                 return (thing as ManagedObject).typeDescription.name;
             return thing.GetType().FullName;
