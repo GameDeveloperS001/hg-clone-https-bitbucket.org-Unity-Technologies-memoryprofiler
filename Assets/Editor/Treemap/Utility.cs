@@ -10,13 +10,11 @@ namespace Treemap
     {
         public static Rect[] GetTreemapRects(float[] values, Rect targetRect)
         {
+			if (values.Length == 0)
+				throw new ArgumentException ("You need to at least pass in one valid value", "values");
+				
             Rect[] result = new Rect[values.Length];
-            if (values.Length == 1)
-            {
-                result[0] = targetRect;
-                return result;
-            }
-
+           
             float totalInputArea = 0f;
             for (int i = 0; i < values.Length; i++)
                 totalInputArea += values[i];
@@ -24,13 +22,17 @@ namespace Treemap
             float totalOutputArea = targetRect.width * targetRect.height;
             bool vertical = targetRect.width > targetRect.height;
 
-            List<Rect> unfinishedRects = new List<Rect>();
+            var unfinishedRects = new List<Rect>();
 
             for (int index = 0; index < values.Length; index++)
             {
                 bool lastItem = index == values.Length - 1;
 
                 float currentInputValue = values[index];
+
+				if (currentInputValue <= 0f)
+					throw new ArgumentException ("only positive float values are supported. found: " + currentInputValue);
+
                 float currentOutputArea = currentInputValue * totalOutputArea / totalInputArea;
                 unfinishedRects = AddRect(unfinishedRects, currentOutputArea, targetRect, vertical);
                 float currentAspect = GetAverageAspect(unfinishedRects);
