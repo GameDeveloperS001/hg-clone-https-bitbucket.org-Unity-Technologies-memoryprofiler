@@ -151,7 +151,15 @@ namespace MemoryProfilerWindow
             UInt64 typeInfoAddress;
             int indexOfObject;
             bool wasAlreadyCrawled;
-            ParseObjectHeader(startIndices, packedMemorySnapshot.managedHeapSections, pointer, out typeInfoAddress, out indexOfObject, out wasAlreadyCrawled, out_managedObjects);
+            try
+            {
+                ParseObjectHeader(startIndices, packedMemorySnapshot.managedHeapSections, pointer, out typeInfoAddress, out indexOfObject, out wasAlreadyCrawled, out_managedObjects);
+            }
+            catch (Exception e)
+            {
+                UnityEngine.Debug.LogWarningFormat("Exception parsing object header. Skipping. {0}", e);
+                return;
+            }
 
             out_connections.Add(new Connection() {from = indexOfFrom, to = indexOfObject});
 
