@@ -201,6 +201,10 @@ namespace MemoryProfilerWindow
                 {
                     UnityEngine.Object.DestroyImmediate(_cachedMeshes[i]);
                 }
+
+                // force a clear as the meshes will leak.
+                EditorUtility.UnloadUnusedAssetsImmediate ();
+
                 _cachedMeshes.Clear();
             }
 
@@ -260,7 +264,7 @@ namespace MemoryProfilerWindow
                 if (meshItemIndex >= maxVerts / 4 || totalItemIndex == visible.Count)
                 {
                     Mesh mesh = new Mesh();
-                    mesh.hideFlags = HideFlags.HideAndDontSave;
+                    mesh.hideFlags = HideFlags.DontSaveInEditor | HideFlags.HideInHierarchy | HideFlags.NotEditable;
                     mesh.vertices = vertices;
                     mesh.triangles = triangles;
                     mesh.colors = colors;
