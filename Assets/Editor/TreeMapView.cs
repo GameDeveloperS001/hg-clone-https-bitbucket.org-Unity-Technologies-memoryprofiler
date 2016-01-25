@@ -25,7 +25,7 @@ namespace MemoryProfilerWindow
 
         private Vector2 mouseTreemapPosition { get { return _ZoomArea.ViewToDrawingTransformPoint(Event.current.mousePosition); } }
 
-        public TreeMapView(MemoryProfilerWindow hostWindow, CrawledMemorySnapshot _unpackedCrawl)
+        public void Setup(MemoryProfilerWindow hostWindow, CrawledMemorySnapshot _unpackedCrawl)
         {
             this._unpackedCrawl = _unpackedCrawl;
             this._hostWindow = hostWindow;
@@ -48,6 +48,9 @@ namespace MemoryProfilerWindow
 
         public void Draw()
         {
+            if (_hostWindow == null)
+                return;
+            
             Rect r = new Rect(0f, 25f, _hostWindow.position.width - _hostWindow._inspector.width, _hostWindow.position.height - 25f);
 
             _ZoomArea.rect = r;
@@ -189,24 +192,23 @@ namespace MemoryProfilerWindow
             RefreshMesh();
         }
 
+        public void CleanupMeshes ()
+        {
+            if (_cachedMeshes == null) {
+                _cachedMeshes = new List<Mesh> ();
+            }
+            else {
+                for (int i = 0; i < _cachedMeshes.Count; i++) {
+                    UnityEngine.Object.DestroyImmediate (_cachedMeshes [i]);
+                }
+               
+                _cachedMeshes.Clear ();
+            }
+        }
+
         private void RefreshMesh()
         {
-            if (_cachedMeshes == null)
-            {
-                _cachedMeshes = new List<Mesh>();
-            }
-            else
-            {
-                for (int i = 0; i < _cachedMeshes.Count; i++)
-                {
-                    UnityEngine.Object.DestroyImmediate(_cachedMeshes[i]);
-                }
-
-                // force a clear as the meshes will leak.
-                EditorUtility.UnloadUnusedAssetsImmediate ();
-
-                _cachedMeshes.Clear();
-            }
+            CleanupMeshes ();
 
             const int maxVerts = 32000;
             Vector3[] vertices = new Vector3[maxVerts];

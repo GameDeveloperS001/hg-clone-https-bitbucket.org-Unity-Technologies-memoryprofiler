@@ -46,10 +46,15 @@ namespace MemoryProfilerWindow
         public void OnDisable()
         {
             //    UnityEditor.MemoryProfiler.MemorySnapshot.OnSnapshotReceived -= IncomingSnapshot;
+            if (_treeMapView != null)
+                _treeMapView.CleanupMeshes ();
         }
 
         public void Initialize()
         {
+            if (_treeMapView == null)
+                _treeMapView = new TreeMapView ();
+            
             if (!_registered)
             {
                 UnityEditor.MemoryProfiler.MemorySnapshot.OnSnapshotReceived += IncomingSnapshot;
@@ -58,6 +63,8 @@ namespace MemoryProfilerWindow
 
             if (_unpackedCrawl == null && _packedCrawled != null && _packedCrawled.valid)
                 Unpack();
+
+
         }
 
         void OnGUI()
@@ -146,7 +153,9 @@ namespace MemoryProfilerWindow
         {
             _unpackedCrawl = CrawlDataUnpacker.Unpack(_packedCrawled);
             _inspector = new Inspector(this, _unpackedCrawl, _snapshot);
-            _treeMapView = new TreeMapView(this, _unpackedCrawl);
+
+            if(_treeMapView != null)
+                _treeMapView.Setup(this, _unpackedCrawl);
         }
 
         void IncomingSnapshot(PackedMemorySnapshot snapshot)
