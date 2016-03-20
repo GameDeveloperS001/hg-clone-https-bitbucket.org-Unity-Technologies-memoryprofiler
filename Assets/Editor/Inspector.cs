@@ -19,6 +19,10 @@ namespace MemoryProfilerWindow
         CrawledMemorySnapshot _unpackedCrawl;
         PrimitiveValueReader _primitiveValueReader;
         Dictionary<ulong, ThingInMemory> objectCache = new Dictionary<ulong, ThingInMemory>();
+        private Texture2D _textureObject;
+        private int _prevInstance;
+        private float _textureSize = 128.0f;
+
 
         static class Styles
         {
@@ -70,6 +74,7 @@ namespace MemoryProfilerWindow
                     EditorGUILayout.LabelField("isManager", nativeObject.isManager.ToString());
                     EditorGUILayout.LabelField("hideFlags", nativeObject.hideFlags.ToString());
                     EditorGUILayout.LabelField("hideFlags", nativeObject.size.ToString());
+                    DrawSpecificTexture2D(nativeObject);
                 }
 
                 var managedObject = _selectedThing as ManagedObject;
@@ -103,7 +108,7 @@ namespace MemoryProfilerWindow
                     GUILayout.Label("Of type: " + staticFields.typeDescription.name);
                     GUILayout.Label("size: " + staticFields.size);
 
-					DrawFields(staticFields.typeDescription, new BytesAndOffset() { bytes = staticFields.typeDescription.staticFieldBytes, offset = 0, pointerSize = _unpackedCrawl.virtualMachineInformation.pointerSize}, true);
+                    DrawFields(staticFields.typeDescription, new BytesAndOffset() { bytes = staticFields.typeDescription.staticFieldBytes, offset = 0, pointerSize = _unpackedCrawl.virtualMachineInformation.pointerSize}, true);
                 }
 
                 if (managedObject == null)
@@ -143,6 +148,32 @@ namespace MemoryProfilerWindow
             GUILayout.EndArea();
         }
 
+        private void DrawSpecificTexture2D(NativeUnityEngineObject nativeObject)
+        {
+            if (nativeObject.className != "Texture2D")
+            {
+                _textureObject = null;
+                return;
+            }
+            EditorGUILayout.HelpBox("Watching Texture Detail Data is only for Editor.", MessageType.Warning, true);
+            if (_prevInstance != nativeObject.instanceID)
+            {
+                _textureObject = EditorUtility.InstanceIDToObject(nativeObject.instanceID) as Texture2D;
+                _prevInstance = nativeObject.instanceID;
+            }
+            if (_textureObject != null)
+            {
+                EditorGUILayout.LabelField("textureInfo: " + _textureObject.width + "x" + _textureObject.height + " " + _textureObject.format);
+                EditorGUILayout.ObjectField(_textureObject, typeof(Texture2D));
+                _textureSize = EditorGUILayout.Slider(_textureSize, 100.0f, 1024.0f);
+                GUILayout.Label(_textureObject, GUILayout.Width(_textureSize), GUILayout.Height(_textureSize * _textureObject.height / _textureObject.width));
+            }
+            else
+            {
+                EditorGUILayout.LabelField("Can't instance texture,maybe it was alreadt released.");
+            }
+        }
+
         private void DrawArray(ManagedObject managedObject)
         {
             var typeDescription = managedObject.typeDescription;
@@ -173,8 +204,8 @@ namespace MemoryProfilerWindow
         private void DrawFields(TypeDescription typeDescription, BytesAndOffset bytesAndOffset, bool useStatics = false)
         {
             int counter = 0;
-		
-			foreach (var field in TypeTools.AllFieldsOf(typeDescription, _unpackedCrawl.typeDescriptions).Where(f => f.isStatic == useStatics))
+        
+            foreach (var field in TypeTools.AllFieldsOf(typeDescription, _unpackedCrawl.typeDescriptions).Where(f => f.isStatic == useStatics))
             {
                 counter++;
                 var gUIStyle = counter % 2 == 0 ? Styles.entryEven : Styles.entryOdd;
@@ -192,8 +223,8 @@ namespace MemoryProfilerWindow
 
         private void DrawFields(ManagedObject managedObject)
         {
-			if (managedObject.typeDescription.isArray)
-				return;
+            if (managedObject.typeDescription.isArray)
+                return;
             GUILayout.Space(10);
             GUILayout.Label("Fields:");
             DrawFields(managedObject.typeDescription, _unpackedCrawl.managedHeap.Find(managedObject.address, _unpackedCrawl.virtualMachineInformation));
@@ -241,9 +272,9 @@ namespace MemoryProfilerWindow
                 case "System.Double":
                     GUILayout.Label(_primitiveValueReader.ReadDouble(bytesAndOffset).ToString());
                     break;
-				case "System.IntPtr":
-					GUILayout.Label(_primitiveValueReader.ReadPointer(bytesAndOffset).ToString("X"));
-					break;
+                case "System.IntPtr":
+                    GUILayout.Label(_primitiveValueReader.ReadPointer(bytesAndOffset).ToString("X"));
+                    break;
                 default:
 
                     if (!typeDescription.isValueType)
@@ -305,11 +336,11 @@ namespace MemoryProfilerWindow
             GUI.skin.button.alignment = TextAnchor.UpperLeft;
             foreach (var rb in thingInMemories)
             {
-				EditorGUI.BeginDisabledGroup(rb == _selectedThing || rb == null);
+                EditorGUI.BeginDisabledGroup(rb == _selectedThing || rb == null);
 
                 GUI.backgroundColor = ColorFor(rb);
 
-				var caption = rb == null ? "null" : rb.caption;
+                var caption = rb == null ? "null" : rb.caption;
 
                 var managedObject = rb as ManagedObject;
                 if (managedObject != null && managedObject.typeDescription.name == "System.String")
@@ -324,8 +355,8 @@ namespace MemoryProfilerWindow
 
         private Color ColorFor(ThingInMemory rb)
         {
-			if (rb == null)
-				return Color.gray;
+            if (rb == null)
+                return Color.gray;
             if (rb is NativeUnityEngineObject)
                 return Color.red;
             if (rb is ManagedObject)
