@@ -25,6 +25,11 @@ namespace MemoryProfilerWindow
             return BitConverter.ToInt32(bytes, offset);
         }
 
+        public Int64 ReadInt64()
+        {
+            return BitConverter.ToInt64(bytes, offset);
+        }
+
         public BytesAndOffset Add(int add)
         {
             return new BytesAndOffset() {bytes = bytes, offset = offset + add, pointerSize = pointerSize};
