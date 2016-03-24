@@ -95,11 +95,8 @@ namespace MemoryProfilerWindow
 
         private void CrawlRawObjectData(PackedMemorySnapshot packedMemorySnapshot, StartIndices startIndices, BytesAndOffset bytesAndOffset, TypeDescription typeDescription, bool useStaticFields, int indexOfFrom, List<Connection>  out_connections, List<PackedManagedObject> out_managedObjects)
         {
-            foreach (var field in TypeTools.AllFieldsOf(typeDescription, _typeDescriptions))
+            foreach (var field in TypeTools.AllFieldsOf(typeDescription, _typeDescriptions, useStaticFields ? TypeTools.FieldFindOptions.OnlyStatic : TypeTools.FieldFindOptions.OnlyInstance))
             {
-                if (field.isStatic != useStaticFields)
-                    continue;
-
                 if (field.typeIndex == typeDescription.typeIndex && typeDescription.isValueType)
                 {
                     //this happens in System.Single, which is a weird type that has a field of its own type.

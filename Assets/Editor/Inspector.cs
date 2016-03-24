@@ -205,7 +205,7 @@ namespace MemoryProfilerWindow
         {
             int counter = 0;
         
-            foreach (var field in TypeTools.AllFieldsOf(typeDescription, _unpackedCrawl.typeDescriptions).Where(f => f.isStatic == useStatics))
+            foreach (var field in TypeTools.AllFieldsOf(typeDescription, _unpackedCrawl.typeDescriptions, useStatics ? TypeTools.FieldFindOptions.OnlyStatic : TypeTools.FieldFindOptions.OnlyInstance))
             {
                 counter++;
                 var gUIStyle = counter % 2 == 0 ? Styles.entryEven : Styles.entryOdd;
