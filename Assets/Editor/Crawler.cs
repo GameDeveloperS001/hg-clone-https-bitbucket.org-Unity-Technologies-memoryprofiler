@@ -252,7 +252,7 @@ namespace MemoryProfilerWindow
 
         private static ulong ClearMarkBit(ulong pointer1)
         {
-            return pointer1 & unchecked((ulong)-1);
+            return pointer1 & ~(1UL);
         }
     }
 }
