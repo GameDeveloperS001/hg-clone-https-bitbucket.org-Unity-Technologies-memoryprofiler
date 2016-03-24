@@ -79,6 +79,7 @@ namespace MemoryProfilerWindow
 #if UNITY_5_4_OR_NEWER // Since Unity 5.4, UnityEngine.Object no longer stores instance id inside when running in the player. Use cached ptr instead to find the index of native object
                 else
                 {
+#error This part requires changes to Unity 5.4 (at the moment, PackedNativeUnityEngineObject has no nativeObjectAddress field). Once 5.4 beta with this change gets released, this error will be removed.
                     var cachedPtr = packedMemorySnapshot.managedHeapSections.Find(address + (UInt64)cachedPtrOffset, packedMemorySnapshot.virtualMachineInformation).ReadInt64();
                     indexOfNativeObject = Array.FindIndex(packedMemorySnapshot.nativeObjects, no => no.nativeObjectAddress == cachedPtr);
                 }
