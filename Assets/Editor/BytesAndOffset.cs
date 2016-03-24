@@ -32,10 +32,11 @@ namespace MemoryProfilerWindow
 
         public void WritePointer(UInt64 value)
         {
-            bytes[offset + 3] = (byte)(value >> 24);
-            bytes[offset + 2] = (byte)(value >> 16);
-            bytes[offset + 1] = (byte)(value >> 8);
-            bytes[offset + 0] = (byte)(value);
+            for (int i = 0; i < pointerSize; i++)
+            {
+                bytes[i + offset] = (byte)value;
+                value >>= 8;
+            }
         }
 
         public BytesAndOffset NextPointer()
