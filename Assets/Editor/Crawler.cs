@@ -223,12 +223,8 @@ namespace MemoryProfilerWindow
                 //okay, we gathered all information, now lets set the mark bit, and store the index for this object in the 2nd pointer of the header, which is rarely used.
                 bo.WritePointer(pointer1 | 1);
 
-                var oldValue = pointer2.ReadPointer();
-                if (oldValue != 0)
-                    throw new Exception("there was a non0 value in the 2nd pointer of the object header. todo: implement backup scheme");
-
                 //test writepointer implementation
-                var magic = 0xdeadbeef;
+                var magic = 0x12345678deadbeefUL;
                 pointer2.WritePointer(magic);
                 var check = pointer2.ReadPointer();
                 if (check != magic)
