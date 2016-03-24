@@ -49,7 +49,17 @@ namespace MemoryProfilerWindow
                 yield break;
 
             var unityEngineObjectTypeDescription = packedMemorySnapshot.typeDescriptions.First(td => td.name == "UnityEngine.Object");
-            var instanceIDOffset = unityEngineObjectTypeDescription.fields.Single(f => f.name == "m_InstanceID").offset;
+
+            bool unityEngineObjectHasInstanceIDField = unityEngineObjectTypeDescription.fields.Any(f => f.name == "m_InstanceID");
+            int instanceIDOffset = -1;
+
+            if (unityEngineObjectHasInstanceIDField)
+                instanceIDOffset = unityEngineObjectTypeDescription.fields.Single(f => f.name == "m_InstanceID").offset;
+
+#if UNITY_5_4_OR_NEWER
+            var cachedPtrOffset = unityEngineObjectTypeDescription.fields.Single(f => f.name == "m_CachedPtr").offset;
+#endif
+
             for (int i = 0; i != packedCrawlerData.managedObjects.Length; i++)
             {
                 var managedObjectIndex = i + startIndices.OfFirstManagedObject;
@@ -60,10 +70,22 @@ namespace MemoryProfilerWindow
                 if (!DerivesFrom(packedMemorySnapshot.typeDescriptions, _typeInfoToTypeDescription[typeInfoAddress].typeIndex, unityEngineObjectTypeDescription.typeIndex))
                     continue;
 
-                var instanceID = packedMemorySnapshot.managedHeapSections.Find(address + (UInt64)instanceIDOffset, packedMemorySnapshot.virtualMachineInformation).ReadInt32();
-                var indexOfNativeObject = Array.FindIndex(packedMemorySnapshot.nativeObjects, no => no.instanceId == instanceID) + startIndices.OfFirstNativeObject;
+                int indexOfNativeObject = -1;
+                if (unityEngineObjectHasInstanceIDField)
+                {
+                    var instanceID = packedMemorySnapshot.managedHeapSections.Find(address + (UInt64)instanceIDOffset, packedMemorySnapshot.virtualMachineInformation).ReadInt32();
+                    indexOfNativeObject = Array.FindIndex(packedMemorySnapshot.nativeObjects, no => no.instanceId == instanceID);
+                }
+#if UNITY_5_4_OR_NEWER // Since Unity 5.4, UnityEngine.Object no longer stores instance id inside when running in the player. Use cached ptr instead to find the index of native object
+                else
+                {
+                    var cachedPtr = packedMemorySnapshot.managedHeapSections.Find(address + (UInt64)cachedPtrOffset, packedMemorySnapshot.virtualMachineInformation).ReadInt64();
+                    indexOfNativeObject = Array.FindIndex(packedMemorySnapshot.nativeObjects, no => no.nativeObjectAddress == cachedPtr);
+                }
+#endif
+
                 if (indexOfNativeObject != -1)
-                    yield return new Connection {@from = managedObjectIndex, to = indexOfNativeObject};
+                    yield return new Connection { @from = managedObjectIndex, to = indexOfNativeObject + startIndices.OfFirstNativeObject };
             }
         }
 
