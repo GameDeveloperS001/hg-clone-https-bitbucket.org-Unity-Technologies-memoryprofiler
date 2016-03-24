@@ -9,7 +9,7 @@ namespace MemoryProfilerWindow
         {
             var lengthPointer = bo.Add(virtualMachineInformation.objectHeaderSize);
             var length = lengthPointer.ReadInt32();
-            var firstChar = lengthPointer.NextPointer();
+            var firstChar = lengthPointer.Add(4);
 
             return System.Text.Encoding.Unicode.GetString(firstChar.bytes, firstChar.offset, length * 2);
         }
