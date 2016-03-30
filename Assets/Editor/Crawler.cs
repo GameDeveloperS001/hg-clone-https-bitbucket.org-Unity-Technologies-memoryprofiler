@@ -80,7 +80,7 @@ namespace MemoryProfilerWindow
                 else
                 {
 #error This part requires changes to Unity 5.4 (at the moment, PackedNativeUnityEngineObject has no nativeObjectAddress field). Once 5.4 beta with this change gets released, this error will be removed.
-                    var cachedPtr = packedMemorySnapshot.managedHeapSections.Find(address + (UInt64)cachedPtrOffset, packedMemorySnapshot.virtualMachineInformation).ReadPointer();
+                    var cachedPtr = packedMemorySnapshot.managedHeapSections.Find(address + (UInt64)cachedPtrOffset, packedMemorySnapshot.virtualMachineInformation).ReadInt64();
                     indexOfNativeObject = Array.FindIndex(packedMemorySnapshot.nativeObjects, no => no.nativeObjectAddress == cachedPtr);
                 }
 #endif
