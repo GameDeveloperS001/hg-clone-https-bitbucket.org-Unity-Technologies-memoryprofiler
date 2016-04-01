@@ -247,7 +247,8 @@ namespace MemoryProfilerWindow
                 bo.WritePointer(pointer1 | 1);
 
                 //test writepointer implementation
-                var magic = 0x12345678deadbeefUL;
+                ulong magic = bo.pointerSize == 8 ? 0x12345678deadbeefUL : 0xdeadbeef;
+
                 pointer2.WritePointer(magic);
                 var check = pointer2.ReadPointer();
                 if (check != magic)
