@@ -76,12 +76,12 @@ namespace MemoryProfilerWindow
                     var instanceID = packedMemorySnapshot.managedHeapSections.Find(address + (UInt64)instanceIDOffset, packedMemorySnapshot.virtualMachineInformation).ReadInt32();
                     indexOfNativeObject = Array.FindIndex(packedMemorySnapshot.nativeObjects, no => no.instanceId == instanceID);
                 }
-#if UNITY_5_4_OR_NEWER // Since Unity 5.4, UnityEngine.Object no longer stores instance id inside when running in the player. Use cached ptr instead to find the index of native object
+#if UNITY_5_4_OR_NEWER // Since Unity 5.4, UnityEngine.Object no longer stores instance id inside when running in the player. Use cached ptr instead to find the index of native object.
                 else
                 {
-#error This part requires changes to Unity 5.4 (at the moment, PackedNativeUnityEngineObject has no nativeObjectAddress field). Once 5.4 beta with this change gets released, this error will be removed.
+					// If you get a compilation error on the following 2 lines, update to Unity 5.4b14.
                     var cachedPtr = packedMemorySnapshot.managedHeapSections.Find(address + (UInt64)cachedPtrOffset, packedMemorySnapshot.virtualMachineInformation).ReadPointer();
-                    indexOfNativeObject = Array.FindIndex(packedMemorySnapshot.nativeObjects, no => no.nativeObjectAddress == cachedPtr);
+                    indexOfNativeObject = Array.FindIndex(packedMemorySnapshot.nativeObjects, no => (ulong)no.nativeObjectAddress == cachedPtr);
                 }
 #endif
 
