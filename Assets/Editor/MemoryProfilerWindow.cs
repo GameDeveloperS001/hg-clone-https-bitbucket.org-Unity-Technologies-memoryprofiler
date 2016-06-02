@@ -31,6 +31,9 @@ namespace MemoryProfilerWindow
         private bool _registered = false;
         public Inspector _inspector;
         TreeMapView _treeMapView;
+        SpreadsheetView _spreadsheetView;
+        private int _selectedTab = 0;
+        public float topMargin = 50f;
 
         [MenuItem("Window/MemoryProfiler")]
         static void Create()
@@ -54,6 +57,8 @@ namespace MemoryProfilerWindow
         {
             if (_treeMapView == null)
                 _treeMapView = new TreeMapView ();
+            if (_spreadsheetView == null)
+                _spreadsheetView = new SpreadsheetView();
             
             if (!_registered)
             {
@@ -108,10 +113,27 @@ namespace MemoryProfilerWindow
                 }
             }
             GUILayout.EndHorizontal();
-            if (_treeMapView != null)
-                _treeMapView.Draw();
+
+			if (_unpackedCrawl == null)
+				return;
+
+            _selectedTab = GUILayout.Toolbar(_selectedTab, new string[] { "TreeMap", "Spreadsheet" } );
+            switch (_selectedTab)
+            {
+                case 0:
+                    if (_treeMapView != null)
+                        _treeMapView.Draw();
+                    break;
+                case 1:
+                    if (_spreadsheetView != null)
+                        _spreadsheetView.Draw();
+                    break;
+                default:
+                    break;
+            }
             if (_inspector != null)
                 _inspector.Draw();
+
 
             //RenderDebugList();
         }
@@ -156,6 +178,8 @@ namespace MemoryProfilerWindow
 
             if(_treeMapView != null)
                 _treeMapView.Setup(this, _unpackedCrawl);
+            if (_spreadsheetView != null)
+                _spreadsheetView.Setup(this, _unpackedCrawl);
         }
 
         void IncomingSnapshot(PackedMemorySnapshot snapshot)
