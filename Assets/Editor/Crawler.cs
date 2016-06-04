@@ -57,7 +57,7 @@ namespace MemoryProfilerWindow
                 instanceIDOffset = unityEngineObjectTypeDescription.fields.Single(f => f.name == "m_InstanceID").offset;
 
 #if UNITY_5_4_OR_NEWER
-            //var cachedPtrOffset = unityEngineObjectTypeDescription.fields.Single(f => f.name == "m_CachedPtr").offset;
+            var cachedPtrOffset = unityEngineObjectTypeDescription.fields.Single(f => f.name == "m_CachedPtr").offset;
 #endif
 
             for (int i = 0; i != packedCrawlerData.managedObjects.Length; i++)
@@ -77,12 +77,12 @@ namespace MemoryProfilerWindow
                     indexOfNativeObject = Array.FindIndex(packedMemorySnapshot.nativeObjects, no => no.instanceId == instanceID);
                 }
 #if UNITY_5_4_OR_NEWER // Since Unity 5.4, UnityEngine.Object no longer stores instance id inside when running in the player. Use cached ptr instead to find the index of native object
-                //else
-                //{
-                //     If you get a compilation error on the following 2 lines, update to Unity 5.4b14.
-                //    var cachedPtr = packedMemorySnapshot.managedHeapSections.Find(address + (UInt64)cachedPtrOffset, packedMemorySnapshot.virtualMachineInformation).ReadPointer();
-                //    indexOfNativeObject = Array.FindIndex(packedMemorySnapshot.nativeObjects, no => (ulong)no.nativeObjectAddress == cachedPtr);
-                //}
+                else
+                {
+                    // If you get a compilation error on the following 2 lines, update to Unity 5.4b14.
+                    var cachedPtr = packedMemorySnapshot.managedHeapSections.Find(address + (UInt64)cachedPtrOffset, packedMemorySnapshot.virtualMachineInformation).ReadPointer();
+                    indexOfNativeObject = Array.FindIndex(packedMemorySnapshot.nativeObjects, no => (ulong)no.nativeObjectAddress == cachedPtr);
+                }
 #endif
 
                 if (indexOfNativeObject != -1)
