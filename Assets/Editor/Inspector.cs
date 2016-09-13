@@ -170,7 +170,7 @@ namespace MemoryProfilerWindow
             }
             else
             {
-                EditorGUILayout.LabelField("Can't instance texture,maybe it was alreadt released.");
+                EditorGUILayout.LabelField("Can't instance texture,maybe it was already released.");
             }
         }
 
