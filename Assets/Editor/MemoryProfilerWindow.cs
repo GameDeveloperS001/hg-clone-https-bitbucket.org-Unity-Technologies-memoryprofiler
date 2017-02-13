@@ -61,8 +61,8 @@ namespace MemoryProfilerWindow
                 _registered = true;
             }
 
-            if (_unpackedCrawl == null && _packedCrawled != null && _packedCrawled.valid)
-                Unpack();
+            //if (_unpackedCrawl == null && _packedCrawled != null && _packedCrawled.valid)
+            //    Unpack();
 
 
         }
