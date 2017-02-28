@@ -76,36 +76,19 @@ namespace MemoryProfilerWindow
             {
                 UnityEditor.MemoryProfiler.MemorySnapshot.RequestNewSnapshot();
             }
+
+            EditorGUI.BeginDisabledGroup(_snapshot == null);
             if (GUILayout.Button("Save Snapshot..."))
             {
-                if (_snapshot != null)
-                {
-                    string fileName = EditorUtility.SaveFilePanel("Save Snapshot", null, "MemorySnapshot", "memsnap");
-                    if (!string.IsNullOrEmpty(fileName))
-                    {
-                        System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-                        using (Stream stream = File.Open(fileName, FileMode.Create))
-                        {
-                            bf.Serialize(stream, _snapshot);
-                        }
-                    }
-                }
-                else
-                {
-                    UnityEngine.Debug.LogWarning("No snapshot to save.  Try taking a snapshot first.");
-                }
+                PackedMemorySnapshotUtility.SaveToFile(_snapshot);
             }
+            EditorGUI.EndDisabledGroup();
+
             if (GUILayout.Button("Load Snapshot..."))
             {
-                string fileName = EditorUtility.OpenFilePanel("Load Snapshot", null, "memsnap");
-                if (!string.IsNullOrEmpty(fileName))
-                {
-                    System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-                    using (Stream stream = File.Open(fileName, FileMode.Open))
-                    {
-                        IncomingSnapshot(bf.Deserialize(stream) as PackedMemorySnapshot);
-                    }
-                }
+                PackedMemorySnapshot packedSnapshot = PackedMemorySnapshotUtility.LoadFromFile();
+                if(packedSnapshot != null)
+                    IncomingSnapshot(packedSnapshot);
             }
             GUILayout.EndHorizontal();
             if (_treeMapView != null)
