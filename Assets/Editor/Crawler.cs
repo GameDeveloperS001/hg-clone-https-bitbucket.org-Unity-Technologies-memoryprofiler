@@ -12,12 +12,22 @@ namespace MemoryProfilerWindow
         private Dictionary<int, UInt64> _pointer2Backups = new Dictionary<int, ulong>();
         private VirtualMachineInformation _virtualMachineInformation;
         private TypeDescription[] _typeDescriptions;
+        private FieldDescription[][] _instanceFields;
+        private FieldDescription[][] _staticFields;
 
         public PackedCrawlerData Crawl(PackedMemorySnapshot input)
         {
             _typeInfoToTypeDescription = input.typeDescriptions.ToDictionary(td => td.typeInfoAddress, td => td);
             _virtualMachineInformation = input.virtualMachineInformation;
             _typeDescriptions = input.typeDescriptions;
+            _instanceFields = new FieldDescription[_typeDescriptions.Length][];
+            _staticFields = new FieldDescription[_typeDescriptions.Length][];
+
+            foreach (var type in _typeDescriptions)
+            {
+                _instanceFields[type.typeIndex] = TypeTools.AllFieldsOf(type, _typeDescriptions, TypeTools.FieldFindOptions.OnlyInstance).ToArray();
+                _staticFields[type.typeIndex] = TypeTools.AllFieldsOf(type, _typeDescriptions, TypeTools.FieldFindOptions.OnlyStatic).ToArray();
+            }
 
             var result = new PackedCrawlerData(input);
 
@@ -118,22 +128,11 @@ namespace MemoryProfilerWindow
 
         private void CrawlRawObjectData(PackedMemorySnapshot packedMemorySnapshot, StartIndices startIndices, BytesAndOffset bytesAndOffset, TypeDescription typeDescription, bool useStaticFields, int indexOfFrom, List<Connection>  out_connections, List<PackedManagedObject> out_managedObjects)
         {
-            foreach (var field in TypeTools.AllFieldsOf(typeDescription, _typeDescriptions, useStaticFields ? TypeTools.FieldFindOptions.OnlyStatic : TypeTools.FieldFindOptions.OnlyInstance))
+            var fields = useStaticFields ? _staticFields[typeDescription.typeIndex] : _instanceFields[typeDescription.typeIndex];
+
+            foreach (var field in fields)
             {
-                if (field.typeIndex == typeDescription.typeIndex && typeDescription.isValueType)
-                {
-                    //this happens in System.Single, which is a weird type that has a field of its own type.
-                    continue;
-                }
-
-                if (field.offset == -1)
-                {
-                    //this is how we encode TLS fields. todo: actually treat TLS fields as roots
-                    continue;
-                }
-
                 var fieldType = packedMemorySnapshot.typeDescriptions[field.typeIndex];
-
                 var fieldLocation = bytesAndOffset.Add(field.offset - (useStaticFields ? 0 : _virtualMachineInformation.objectHeaderSize));
 
                 if (fieldType.isValueType)
