@@ -33,7 +33,7 @@ namespace MemoryProfilerWindow
 
             var managedObjects = new List<PackedManagedObject>(result.startIndices.OfFirstManagedObject * 3);
 
-            var connections = new List<Connection>(managedObjects.Count * 3);
+            var connections = new List<Connection>(managedObjects.Capacity * 3);
             //we will be adding a lot of connections, but the input format also already had connections. (nativeobject->nativeobject and nativeobject->gchandle). we'll add ours to the ones already there.
             connections.AddRange(input.connections);
 
