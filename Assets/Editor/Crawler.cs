@@ -75,9 +75,9 @@ namespace MemoryProfilerWindow
                 var managedObjectIndex = i + startIndices.OfFirstManagedObject;
                 var address = packedCrawlerData.managedObjects[i].address;
 
-                var typeInfoAddress = RestoreObjectHeader(packedMemorySnapshot.managedHeapSections, address, managedObjectIndex);
+                var typeDescription = RestoreObjectHeader(packedMemorySnapshot.managedHeapSections, address, managedObjectIndex);
 
-                if (!DerivesFrom(packedMemorySnapshot.typeDescriptions, _typeInfoToTypeDescription[typeInfoAddress].typeIndex, unityEngineObjectTypeDescription.typeIndex))
+                if (!DerivesFrom(packedMemorySnapshot.typeDescriptions, typeDescription.typeIndex, unityEngineObjectTypeDescription.typeIndex))
                     continue;
 
                 int indexOfNativeObject = -1;
@@ -112,7 +112,24 @@ namespace MemoryProfilerWindow
             return DerivesFrom(typeDescriptions, baseIndex, potentialBase);
         }
 
-        private ulong RestoreObjectHeader(MemorySection[] heaps, ulong address, int managedObjectIndex)
+        private TypeDescription GetTypeDescription(MemorySection[] heap, ulong objectAddress)
+        {
+            TypeDescription typeDescription;
+
+            // IL2CPP has the class pointer as the first member of the object.
+            if (!_typeInfoToTypeDescription.TryGetValue(objectAddress, out typeDescription))
+            {
+                // Mono has a vtable pointer as the first member of the object.
+                // The first member of the vtable is the class pointer.
+                var vtable = heap.Find(objectAddress, _virtualMachineInformation);
+                var vtableClassPointer = vtable.ReadPointer();
+                typeDescription = _typeInfoToTypeDescription[vtableClassPointer];
+            }
+
+            return typeDescription;
+        }
+
+        private TypeDescription RestoreObjectHeader(MemorySection[] heaps, ulong address, int managedObjectIndex)
         {
             var bo = heaps.Find(address, _virtualMachineInformation);
             var mask = this._virtualMachineInformation.pointerSize == 8 ? System.UInt64.MaxValue - 1 : System.UInt32.MaxValue - 1;
@@ -123,7 +140,8 @@ namespace MemoryProfilerWindow
             UInt64 restoreValue = 0;
             _pointer2Backups.TryGetValue(managedObjectIndex, out restoreValue);
             bo.NextPointer().WritePointer(restoreValue);
-            return typeInfoAddress;
+
+            return GetTypeDescription(heaps, typeInfoAddress);
         }
 
         private void CrawlRawObjectData(PackedMemorySnapshot packedMemorySnapshot, StartIndices startIndices, BytesAndOffset bytesAndOffset, TypeDescription typeDescription, bool useStaticFields, int indexOfFrom, List<Connection>  out_connections, List<PackedManagedObject> out_managedObjects)
@@ -232,11 +250,11 @@ namespace MemoryProfilerWindow
 
             if (HasMarkBit(pointer1) == 0)
             {
+                TypeDescription typeDescription = GetTypeDescription(heap, pointer1);
+
                 wasAlreadyCrawled = false;
                 indexOfObject = outManagedObjects.Count + startIndices.OfFirstManagedObject;
-                typeInfoAddress = pointer1;
-                var typeDescription = _typeInfoToTypeDescription[pointer1];
-
+                typeInfoAddress = typeDescription.typeInfoAddress;
 
                 var size = SizeOfObjectInBytes(typeDescription, bo, heap, originalHeapAddress);
 
