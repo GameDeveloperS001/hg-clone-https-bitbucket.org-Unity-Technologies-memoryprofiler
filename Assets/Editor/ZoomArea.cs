@@ -127,7 +127,11 @@ public class ZoomArea
     [System.Serializable]
     public class Styles
     {
+#if UNITY_5_5_OR_NEWER
+        public GUIStyle background = "AnimationKeyframeBackground";
+#else
         public GUIStyle background = "AnimationCurveEditorBackground";
+#endif
         public GUIStyle horizontalScrollbar;
         public GUIStyle horizontalMinMaxScrollbarThumb;
         public GUIStyle horizontalScrollbarLeftButton;
@@ -401,7 +405,7 @@ public class ZoomArea
     {
         area.x = 0;
         area.y = 0;
-        int id = GUIUtility.GetControlID(zoomableAreaHash, FocusType.Native, area);
+        int id = GUIUtility.GetControlID(zoomableAreaHash, FocusType.Passive, area);
 
         switch (Event.current.GetTypeForControl(id))
         {

@@ -76,12 +76,17 @@ namespace MemoryProfilerWindow
 
         static NativeUnityEngineObject UnpackNativeUnityEngineObject(PackedMemorySnapshot packedSnapshot, PackedNativeUnityEngineObject packedNativeUnityEngineObject)
         {
-            var className = packedSnapshot.nativeTypes[packedNativeUnityEngineObject.classId].name;
+#if UNITY_5_6_OR_NEWER
+            var classId = packedNativeUnityEngineObject.nativeTypeArrayIndex;
+#else
+            var classId = packedNativeUnityEngineObject.classId;
+#endif
+            var className = packedSnapshot.nativeTypes[classId].name;
 
             return new NativeUnityEngineObject()
                    {
                        instanceID = packedNativeUnityEngineObject.instanceId,
-                       classID = packedNativeUnityEngineObject.classId,
+                       classID = classId,
                        className = className,
                        name = packedNativeUnityEngineObject.name,
                        caption = packedNativeUnityEngineObject.name + "(" + className + ")",

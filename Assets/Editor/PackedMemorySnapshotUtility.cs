@@ -10,6 +10,12 @@ using System;
 using System.Reflection;
 using Newtonsoft.Json.Serialization;
 
+#if UNITY_5_5_OR_NEWER
+using Profiler = UnityEngine.Profiling.Profiler;
+#else
+using Profiler = UnityEngine.Profiler;
+#endif
+
 public static class PackedMemorySnapshotUtility
 {
 
@@ -33,7 +39,7 @@ public static class PackedMemorySnapshotUtility
 
         Debug.LogFormat("Saving...");
         System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
-        UnityEngine.Profiling.Profiler.BeginSample("PackedMemorySnapshotUtility.SaveToFile");
+        Profiler.BeginSample("PackedMemorySnapshotUtility.SaveToFile");
         stopwatch.Start();
 
         string fileExtension = Path.GetExtension(filePath);
@@ -56,7 +62,7 @@ public static class PackedMemorySnapshotUtility
         }
 
         stopwatch.Stop();
-        UnityEngine.Profiling.Profiler.EndSample();
+        Profiler.EndSample();
         Debug.LogFormat("Saving took {0}ms", stopwatch.ElapsedMilliseconds);
     }
 
@@ -81,7 +87,7 @@ public static class PackedMemorySnapshotUtility
         string fileExtension = Path.GetExtension(filePath);
 
         if (string.Equals(fileExtension, ".memsnap3", System.StringComparison.OrdinalIgnoreCase)) {
-            UnityEngine.Profiling.Profiler.BeginSample("PackedMemorySnapshotUtility.LoadFromFile(litjson)");
+            Profiler.BeginSample("PackedMemorySnapshotUtility.LoadFromFile(litjson)");
             stopwatch.Start();
 
             using (TextReader reader = File.OpenText(filePath)) {
@@ -92,22 +98,22 @@ public static class PackedMemorySnapshotUtility
             }
 
             stopwatch.Stop();
-            UnityEngine.Profiling.Profiler.EndSample();
+            Profiler.EndSample();
         }
         else if(string.Equals(fileExtension, ".memsnap2", System.StringComparison.OrdinalIgnoreCase))
         {
-            UnityEngine.Profiling.Profiler.BeginSample("PackedMemorySnapshotUtility.LoadFromFile(json)");
+            Profiler.BeginSample("PackedMemorySnapshotUtility.LoadFromFile(json)");
             stopwatch.Start();
 
             var json = File.ReadAllText(filePath);
             result = JsonUtility.FromJson<PackedMemorySnapshot>(json);
 
             stopwatch.Stop();
-            UnityEngine.Profiling.Profiler.EndSample();
+            Profiler.EndSample();
         }
         else if(string.Equals(fileExtension, ".memsnap", System.StringComparison.OrdinalIgnoreCase))
         {
-            UnityEngine.Profiling.Profiler.BeginSample("PackedMemorySnapshotUtility.LoadFromFile(binary)");
+            Profiler.BeginSample("PackedMemorySnapshotUtility.LoadFromFile(binary)");
             stopwatch.Start();
 
             var binaryFormatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
@@ -117,7 +123,7 @@ public static class PackedMemorySnapshotUtility
             }
 
             stopwatch.Stop();
-            UnityEngine.Profiling.Profiler.EndSample();
+            Profiler.EndSample();
         }
         else
         {
