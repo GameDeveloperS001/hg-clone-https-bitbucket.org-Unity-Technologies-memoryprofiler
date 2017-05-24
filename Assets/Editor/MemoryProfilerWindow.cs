@@ -74,6 +74,7 @@ namespace MemoryProfilerWindow
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Take Snapshot"))
             {
+                UnityEditor.EditorUtility.DisplayProgressBar("Take Snapshot", "Downloading Snapshot...", 0.0f);
                 UnityEditor.MemoryProfiler.MemorySnapshot.RequestNewSnapshot();
             }
 
@@ -145,8 +146,15 @@ namespace MemoryProfilerWindow
         {
             _snapshot = snapshot;
 
+            UnityEditor.EditorUtility.DisplayProgressBar("Take Snapshot", "Crawling Snapshot...", 0.33f);
+
             _packedCrawled = new Crawler().Crawl(_snapshot);
+
+            UnityEditor.EditorUtility.DisplayProgressBar("Take Snapshot", "Unpacking Snapshot...", 0.67f);
+
             Unpack();
+
+            UnityEditor.EditorUtility.ClearProgressBar();
         }
     }
 }
