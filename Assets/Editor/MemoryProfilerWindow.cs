@@ -92,6 +92,11 @@ namespace MemoryProfilerWindow
                 if(packedSnapshot != null)
                     IncomingSnapshot(packedSnapshot);
             }
+
+            if (_unpackedCrawl != null)
+            {
+                GUILayout.Label(string.Format("Total memory: {0}", EditorUtility.FormatBytes(_unpackedCrawl.totalSize)));
+            }
             GUILayout.EndHorizontal();
             if (_treeMapView != null)
                 _treeMapView.Draw();

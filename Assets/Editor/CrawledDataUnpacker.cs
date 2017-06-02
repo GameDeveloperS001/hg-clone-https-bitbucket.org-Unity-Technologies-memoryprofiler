@@ -24,22 +24,21 @@ namespace MemoryProfilerWindow
                 virtualMachineInformation = packedSnapshot.virtualMachineInformation
             };
 
-            var combined = new ThingInMemory[0].Concat(result.gcHandles).Concat(result.nativeObjects).Concat(result.staticFields).Concat(result.managedObjects).ToArray();
-            result.allObjects = combined;
+            result.FinishSnapshot();
 
-            var referencesLists = MakeTempLists(combined);
-            var referencedByLists = MakeTempLists(combined);
+            var referencesLists = MakeTempLists(result.allObjects);
+            var referencedByLists = MakeTempLists(result.allObjects);
 
             foreach (var connection in packedCrawlerData.connections)
             {
-                referencesLists[connection.@from].Add(combined[connection.to]);
-                referencedByLists[connection.to].Add(combined[connection.@from]);
+                referencesLists[connection.@from].Add(result.allObjects[connection.to]);
+                referencedByLists[connection.to].Add(result.allObjects[connection.@from]);
             }
 
-            for (var i = 0; i != combined.Length; i++)
+            for (var i = 0; i != result.allObjects.Length; i++)
             {
-                combined[i].references = referencesLists[i].ToArray();
-                combined[i].referencedBy = referencedByLists[i].ToArray();
+                result.allObjects[i].references = referencesLists[i].ToArray();
+                result.allObjects[i].referencedBy = referencedByLists[i].ToArray();
             }
 
             return result;
