@@ -43,9 +43,10 @@ namespace MemoryProfilerWindow
         {
         }
 
-        public void OnDisable()
+        public void OnDestroy()
         {
-            //    UnityEditor.MemoryProfiler.MemorySnapshot.OnSnapshotReceived -= IncomingSnapshot;
+            UnityEditor.MemoryProfiler.MemorySnapshot.OnSnapshotReceived -= IncomingSnapshot;
+
             if (_treeMapView != null)
                 _treeMapView.CleanupMeshes ();
         }
