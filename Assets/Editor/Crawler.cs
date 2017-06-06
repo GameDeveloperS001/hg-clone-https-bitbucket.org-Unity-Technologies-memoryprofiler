@@ -8,22 +8,22 @@ namespace MemoryProfilerWindow
     enum PointerType
     {
         Reference,
-        Value
+        RawPointer
     }
 
     struct ThingToProfile
     {
-        public PointerType type;
-        public BytesAndOffset bytesAndOffset;
-        public ulong object_offset;
-        public TypeDescription typeDescription;
-        public bool useStaticFields;
-        public int indexOfFrom;
+        public readonly PointerType type;
+        public readonly BytesAndOffset bytesAndOffset;
+        public readonly ulong objectPointer;
+        public readonly TypeDescription typeDescription;
+        public readonly bool useStaticFields;
+        public readonly int indexOfFrom;
 
-        public ThingToProfile(ulong refOffset, int refIndexOfFrom)
+        public ThingToProfile(ulong objectPtr, int refIndexOfFrom)
         {
             type = PointerType.Reference;
-            object_offset = refOffset;
+            objectPointer = objectPtr;
             indexOfFrom = refIndexOfFrom;
 
             useStaticFields = true;
@@ -33,12 +33,12 @@ namespace MemoryProfilerWindow
 
         public ThingToProfile(TypeDescription typeDesc, BytesAndOffset inBytesAndOffset, bool inUseStaticFields, int inIndexOfFrom)
         {
-            type = PointerType.Reference;
+            type = PointerType.RawPointer;
             typeDescription = typeDesc;
             bytesAndOffset = inBytesAndOffset;
             useStaticFields = inUseStaticFields;
             indexOfFrom = inIndexOfFrom;
-            object_offset = 0;
+            objectPointer = 0;
         }
     }
 
@@ -77,7 +77,6 @@ namespace MemoryProfilerWindow
             Stack<ThingToProfile> thingsToProfile = new Stack<ThingToProfile>();
             for(int i = 0; i < input.gcHandles.Length; ++i)
             {
-
                 thingsToProfile.Push(new ThingToProfile(input.gcHandles[i].target, result.startIndices.OfFirstGCHandle + i));
             }
 
@@ -87,12 +86,12 @@ namespace MemoryProfilerWindow
                 thingsToProfile.Push(new ThingToProfile(typeDescription, new BytesAndOffset { bytes = typeDescription.staticFieldBytes, offset = 0, pointerSize = _virtualMachineInformation.pointerSize }, true, result.startIndices.OfFirstStaticFields + i));
             }
 
-            while(thingsToProfile.Count > 0)
+            while (thingsToProfile.Count > 0)
             {
                 var thingToProfile = thingsToProfile.Pop();
                 if(thingToProfile.type == PointerType.Reference)
                 {
-                    CrawlPointerNonRecursive(input, result.startIndices, thingToProfile.object_offset, thingToProfile.indexOfFrom, connections, managedObjects, thingsToProfile);
+                    CrawlPointerNonRecursive(input, result.startIndices, thingToProfile.objectPointer, thingToProfile.indexOfFrom, connections, managedObjects, thingsToProfile);
                 }
                 else
                 {
