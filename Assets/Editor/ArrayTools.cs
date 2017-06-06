@@ -12,7 +12,7 @@ namespace MemoryProfilerWindow
             var bounds = bo.Add(virtualMachineInformation.arrayBoundsOffsetInHeader).ReadPointer();
 
             if (bounds == 0)
-#if UNITY_2017_1_OR_NEWER
+#if UNITY_2017_2_OR_NEWER
                 return (int)bo.Add(virtualMachineInformation.arraySizeOffsetInHeader).ReadPointer();
 #else
                 return bo.Add(virtualMachineInformation.arraySizeOffsetInHeader).ReadInt32();
@@ -22,7 +22,7 @@ namespace MemoryProfilerWindow
             int length = 1;
             for (int i = 0; i != arrayType.arrayRank; i++)
             {
-#if UNITY_2017_1_OR_NEWER
+#if UNITY_2017_2_OR_NEWER
                 length *= (int)cursor.ReadPointer();
                 cursor = cursor.Add(virtualMachineInformation.pointerSize == 4 ? 8 : 16);
 #else
