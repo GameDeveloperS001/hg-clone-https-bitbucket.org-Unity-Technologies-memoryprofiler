@@ -210,11 +210,7 @@ namespace MemoryProfilerWindow
 
                 if(fieldType.isValueType)
                 {
-                    foreach(var fieldToAdd in _instanceFields[fieldType.typeIndex])
-                    {
-                        out_thingsToProfile.Push(new ThingToProfile(packedMemorySnapshot.typeDescriptions[fieldToAdd.typeIndex], bytesAndOffset, false, indexOfFrom));
-                    }
-
+                    out_thingsToProfile.Push(new ThingToProfile(fieldType, fieldLocation, false, indexOfFrom));
                     continue;
                 }
                 else
