@@ -200,6 +200,11 @@ namespace MemoryProfilerWindow
         private void CrawlRawObjectDataNonRecursive(PackedMemorySnapshot packedMemorySnapshot, StartIndices startIndices, BytesAndOffset bytesAndOffset, TypeDescription typeDescription, bool useStaticFields, int indexOfFrom,
                                                         List<Connection> out_connections, List<PackedManagedObject> out_managedObjects, Stack<ThingToProfile> out_thingsToProfile)
         {
+
+            // Do not crawl MemoryProfilerWindow objects
+            if (typeDescription.name.StartsWith("MemoryProfilerWindow."))
+                return;
+
             var fields = useStaticFields ? _staticFields[typeDescription.typeIndex] : _instanceFields[typeDescription.typeIndex];
 
             for(int i = 0; i < fields.Length; ++i)
