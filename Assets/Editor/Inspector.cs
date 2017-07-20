@@ -67,7 +67,6 @@ namespace MemoryProfilerWindow
                     GUILayout.Space(5);
                     EditorGUILayout.LabelField("Name", nativeObject.name);
                     EditorGUILayout.LabelField("ClassName", nativeObject.className);
-                    EditorGUILayout.LabelField("ClassID", nativeObject.classID.ToString());
                     EditorGUILayout.LabelField("instanceID", nativeObject.instanceID.ToString());
                     EditorGUILayout.LabelField("isDontDestroyOnLoad", nativeObject.isDontDestroyOnLoad.ToString());
                     EditorGUILayout.LabelField("isPersistent", nativeObject.isPersistent.ToString());
