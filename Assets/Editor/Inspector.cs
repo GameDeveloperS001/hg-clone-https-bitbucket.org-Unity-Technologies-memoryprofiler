@@ -148,6 +148,25 @@ namespace MemoryProfilerWindow
             GUILayout.EndArea();
         }
 
+		private Texture2D GetTexture(NativeUnityEngineObject nativeObject)
+		{
+			// If the texture has a name, try to match it to a loaded object
+			if(!string.IsNullOrEmpty(nativeObject.name))
+			{
+				Texture2D[] loadedTextures = Resources.FindObjectsOfTypeAll<Texture2D>();
+
+				for (int i = 0; i < loadedTextures.Length; i++) 
+				{
+					if(loadedTextures[i].name == nativeObject.name)
+					{
+						return loadedTextures[i];
+					}
+				}
+			}
+			// None matched
+			return null;
+		}
+
         private void DrawSpecificTexture2D(NativeUnityEngineObject nativeObject)
         {
             if (nativeObject.className != "Texture2D")
@@ -158,7 +177,8 @@ namespace MemoryProfilerWindow
             EditorGUILayout.HelpBox("Watching Texture Detail Data is only for Editor.", MessageType.Warning, true);
             if (_prevInstance != nativeObject.instanceID)
             {
-                _textureObject = EditorUtility.InstanceIDToObject(nativeObject.instanceID) as Texture2D;
+				// Attempt to match the texture to one in editor
+				_textureObject = GetTexture(nativeObject);
                 _prevInstance = nativeObject.instanceID;
             }
             if (_textureObject != null)
