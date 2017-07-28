@@ -18,7 +18,7 @@ namespace MemoryProfilerWindow
 
         //contains concatenation of nativeObjects, gchandles, managedobjects and staticfields
         public ThingInMemory[] allObjects { get; private set; }
-        public int totalSize { get; private set; }
+        public long totalSize { get; private set; }
 
         public MemorySection[] managedHeap;
         public TypeDescription[] typeDescriptions;
@@ -34,7 +34,7 @@ namespace MemoryProfilerWindow
 
     public class ThingInMemory
     {
-        public int size;
+        public long size;
         public string caption;
         public ThingInMemory[] references;
         public ThingInMemory[] referencedBy;
