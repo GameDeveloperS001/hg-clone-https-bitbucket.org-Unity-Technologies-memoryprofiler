@@ -1,7 +1,7 @@
 # MemoryProfiler
 
 Unity 5.3a4 has a new very lowlevel memory profiler API. It can tell you which objects got blamed for how much
-C++ memory allocations. On IL2CPP and Mono .NET 2.0 platforms, it will also give you a dump of the entire C# heap, as well as C# type descriptions.
+C++ memory allocations. On IL2CPP and Mono .NET 3.5 platforms, it will also give you a dump of the entire C# heap, as well as C# type descriptions.
 
 This API is too low level for most people to benefit from. The intention is to write a much nicer UI window ontop of this API that will actually be readily useful for many users, in helping them figure out which objects are loaded,  which objects take a lot of memory,  and most important, _why_ that object is in memory. This repository is that nicer UI window, very much in progress of being built.
 
@@ -13,7 +13,7 @@ Today, the UI part of this feature is still very rough. We decided to opensource
 
 # Usage:
 - Make sure you're running Unity 5.3a4 or later for IL2CPP support.
-- Make sure you're running Unity 2017.3.0b1 or later for Mono .NET 2.0 support.
+- Make sure you're running Unity 2017.3.0b1 or later for Mono .NET 3.5 support.
 - Build an il2cpp project & run it (any il2cpp platform should be fine).
 - Open the user project in this repository.
 - Open the normal profiler window.
